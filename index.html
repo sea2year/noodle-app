@@ -1,0 +1,4617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>重庆小面</title>
+<script>
+(function(){
+  var W=402,H=874;
+  function scale(){ var s=Math.min((window.innerWidth||screen.width||W)/W,(window.innerHeight||screen.height||H)/H); document.documentElement.style.setProperty('--as',s); document.documentElement.style.setProperty('--ah',Math.round(H*s)+'px'); }
+  scale(); window.addEventListener('resize',scale); window.addEventListener('orientationchange',function(){setTimeout(scale,100);});
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; overflow-x:hidden; -webkit-tap-highlight-color:transparent; }
+body {
+  background:#333;
+  display:flex; justify-content:center; align-items:flex-start;
+  min-height:var(--ah, 874px);
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+}
+.app {
+  width:402px; height:874px;
+  position:relative; overflow:hidden;
+  background:#000;
+  flex-shrink:0;
+  zoom:var(--as, 1);
+  user-select:none; -webkit-user-select:none;
+}
+
+/* ===== Full Background Image ===== */
+.bg-photo {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:0;
+}
+.bg-photo img {
+  width:100%; height:100%;
+  object-fit:cover;
+}
+
+.app-content {
+  position:relative; z-index:0;
+}
+/* Scale entrance — only when .enter is present (custom path) */
+.app.enter .app-content {
+  animation: pageEnter 3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+@keyframes pageEnter {
+  from { transform: scale(0.85); }
+  to   { transform: scale(1); }
+}
+
+/* Dark overlay — covers background but sits below 浇头 */
+.bg-overlay {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  background:rgba(0,0,0,0.55);
+  z-index:6; pointer-events:none;
+  opacity:0;
+}
+.app.enter .bg-overlay {
+  animation: darkenThenLift 4s ease forwards;
+}
+@keyframes darkenThenLift {
+  0%   { opacity:0; }
+  15%  { opacity:1; }
+  70%  { opacity:1; }
+  100% { opacity:0; }
+}
+
+/* ===== Text Labels ===== */
+.price-tag {
+  position:absolute; left:333px; top:161px;
+  font-family:'Inter','PingFang SC','Hiragino Sans GB',sans-serif;
+  font-size:55px; font-weight:900; /* black */
+  color:#F2FF00;
+  -webkit-text-stroke:3px #7B0202;
+  paint-order:stroke fill;
+  z-index:4; pointer-events:none;
+}
+.price-tag.pop { animation: pricePop 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes pricePop { 0%{transform:scale(1.3)} 100%{transform:scale(1)} }
+.sec-label {
+  position:absolute; font-size:16px; font-weight:600;
+  z-index:5; pointer-events:none;
+}
+.sec-label.white { color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.5); }
+.sec-label.red { color:#CA2626; }
+
+/* ===== Figma Segmented Pill Controls ===== */
+.seg-control {
+  position:absolute; z-index:7;
+  display:flex; align-items:center;
+  overflow:hidden; cursor:pointer;
+  border-radius:999px;
+}
+.seg-control::before {
+  content:'';
+  position:absolute; inset:-4px;
+  border-radius:999px;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.7) 45%, rgba(255,255,200,0.5) 55%, transparent 80%);
+  background-size:250% 100%;
+  opacity:0;
+  pointer-events:none;
+  z-index:0;
+}
+.app.enter .seg-control::before,
+.app.shimmer .seg-control::before {
+  animation: shimmer 4s ease-in-out forwards;
+}
+@keyframes shimmer {
+  0%   { opacity:0; background-position:250% 0; }
+  8%   { opacity:1; }
+  30%  { opacity:1; }
+  80%  { opacity:0.6; }
+  100% { opacity:0; background-position:-250% 0; }
+}
+.seg-pill {
+  position:absolute; top:0; height:100%;
+  border-radius:999px;
+  transition:left 200ms ease-in, width 200ms ease-in;
+  pointer-events:none;
+}
+.seg-pill.red   { background:#CA2626; }
+.seg-pill.beige { background:#e3c9a4; }
+
+.seg-label {
+  flex:1; text-align:center; z-index:1;
+  position:relative; font-size:14px; line-height:1;
+  white-space:nowrap; -webkit-tap-highlight-color:transparent;
+}
+
+/* Method (做法): 干/湿 */
+#methodSeg { left:21px; top:105px; width:70px; height:35px; background:#e67f65; border:1px solid #e3c9a4; }
+#methodSeg .seg-label { font-family:'Songti TC','STSong',serif; font-weight:700; font-size:16px; }
+
+/* Type (种类): 细面/细粉/刀削面/桂林米粉 — absolute positioning from Figma */
+#typeSeg { left:183px; top:105px; width:213px; height:35px; background:#e67f65; border:1px solid #e3c9a4; display:block; }
+#typeSeg .seg-label { font-family:'Songti TC','STSong',serif; font-weight:400; position:absolute; top:50%; transform:translateY(-50%); flex:none; width:auto; }
+
+/* Portion (份量): 中份/大份/巨大 */
+#portionSeg { left:24px; top:535px; width:158px; height:39px; background:#e3c9a4; border:1px solid #CA2626; }
+#portionSeg .seg-pill { transition:left 200ms linear; }
+#portionSeg .seg-label { font-family:'PingFang SC','Hiragino Sans GB',sans-serif; }
+
+/* Spice (辣度): 不辣/微辣/爆辣 */
+#spiceSeg { left:231px; top:535px; width:160px; height:39px; background:#e3c9a4; border:1px solid #CA2626; }
+#spiceSeg .seg-pill { transition:left 200ms linear; }
+#spiceSeg .seg-label { font-family:'PingFang SC','Hiragino Sans GB',sans-serif; }
+
+.random-btn {
+  position:absolute; left:350px; top:468px;
+  width:35px; height:37px; z-index:5;
+  cursor:pointer;
+}
+.random-btn img { width:100%; height:100%; transition:transform 0.6s cubic-bezier(0.4,0,0.2,1); }
+.random-btn .random-label {
+  position:absolute; top:100%; left:50%; transform:translateX(-50%);
+  font-family:'PingFang SC',sans-serif; font-size:10px; font-weight:400;
+  color:#CA2626; white-space:nowrap; margin-top:2px;
+}
+
+/* ===== Bowl Display — Figma: image 153 at (107,242) 192×192 ===== */
+.bowl-area {
+  position:absolute; left:107px; top:242px;
+  width:192px; height:192px;
+  z-index:3; pointer-events:none;
+}
+.bowl-area img {
+  position:absolute; top:0; left:0;
+  width:100%; height:100%;
+  object-fit:contain;
+}
+/* Layers: broth → noodles → 酸辣粉 → other toppings → condiments */
+.bowl-broth   { z-index:0; }
+.bowl-noodles { z-index:1; }
+.bowl-suanlafen, .bowl-toppings, .bowl-condiments {
+  position:absolute; top:0; left:0;
+  width:100%; height:100%;
+}
+.bowl-suanlafen  { z-index:2; }
+.bowl-toppings   { z-index:3; }
+.bowl-condiments { z-index:4; }
+.bowl-toppings img, .bowl-suanlafen img {
+  position:absolute;
+  width:120px; height:120px;
+  object-fit:contain;
+}
+.bowl-toppings img.spin-in {
+  animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes popIn {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.bowl-condiments img {
+  position:absolute; top:0; left:0;
+  width:100px; height:100px;
+  object-fit:contain;
+}
+
+/* ===== 浇头 - Figma-absolute positions ===== */
+.jiaotou-title {
+  position:absolute; left:28px; top:149px;
+  font-family:'Songti TC','STSong',serif;
+  font-size:24px; font-weight:700; color:#fff;
+  z-index:5;
+  text-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
+
+.jiaotou-layer {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:4; pointer-events:none;
+}
+.jiaotou-item {
+  position:absolute;
+  width:84px; height:75px;
+  cursor:pointer; transition:opacity 0.3s cubic-bezier(0,0,0.58,1);
+  pointer-events:auto;
+}
+.jiaotou-item.dissolve { opacity:0; }
+.jiaotou-item img {
+  width:100%; height:100%;
+  object-fit:contain;
+  transition:opacity 0.15s ease;
+}
+
+
+/* ===== 小料台 ===== */
+.condiment-scroll {
+  position:absolute; left:7px; top:592px;
+  width:395px; height:151px;
+  z-index:4;
+  overflow-x:auto; overflow-y:visible;
+  white-space:nowrap;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.condiment-scroll::-webkit-scrollbar { display:none; }
+.condiment-item {
+  display:inline-block;
+  cursor:pointer;
+  vertical-align:bottom;
+  margin-right:5px;
+}
+.condiment-item:active { transform:scale(0.9); }
+
+.condiment-item img { display:block; width:auto; }
+
+/* ===== Bottom Buttons ===== */
+.btn-enter-menu {
+  position:absolute; left:22px; top:749px;
+  width:174px; height:52px;
+  cursor:pointer; z-index:5;
+}
+.btn-enter-menu img { width:100%; height:100%; object-fit:contain; }
+.btn-enter-menu:active { opacity:0.8; }
+
+.btn-cart {
+  position:absolute; right:19px; top:749px;
+  width:170px; height:52px;
+  cursor:pointer; z-index:5;
+}
+.btn-cart img { width:100%; height:100%; object-fit:contain; }
+.btn-cart:active { opacity:0.8; }
+
+/* ===== Bottom Bar & Nav ===== */
+.bottom-bar {
+  position:absolute; left:-9px; top:813px;
+  width:442px; height:61px;
+  background:#fff;
+  box-shadow:0 -3px 4px rgba(180,37,37,0.26);
+  z-index:16;
+}
+.bottom-bar.raised { z-index:102; }
+.nav-bar-bg {
+  position:absolute; left:-9px; top:813px;
+  width:442px; height:61px;
+  background:#fff;
+  box-shadow:0 -3px 4px rgba(180,37,37,0.26);
+  z-index:101; display:none;
+}
+.nav-bar-bg.show { display:block; }
+.nav-bar {
+  position:absolute; left:41px; top:822px;
+  width:326px; height:49px;
+  z-index:102;
+}
+.nav-item {
+  position:absolute;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.nav-item img { max-width:100%; max-height:100%; object-fit:contain; }
+.nav-item:active { opacity:0.7; }
+
+/* ===== Loading Overlay ===== */
+.loading-overlay {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:350; display:none;
+  background:#fff;
+  flex-direction:column; align-items:center; justify-content:center;
+  opacity:1; transition:opacity 0.4s ease-out;
+}
+.loading-overlay.show { display:flex; }
+.loading-overlay.fade-out { opacity:0; }
+.loading-gif {
+  width:200px; height:200px;
+  object-fit:contain;
+}
+.loading-text {
+  margin-top:16px;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:15px; color:#000; font-weight:500;
+}
+
+/* ===== Placeholder Pages (orders, me) ===== */
+#page-order, #page-me {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  background:#F5F5F5;
+  display:none; flex-direction:column;
+  z-index:10; overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+#page-order::-webkit-scrollbar, #page-me::-webkit-scrollbar { display:none; }
+#page-me { padding-bottom:80px; }
+
+/* Profile header */
+.me-profile {
+  display:flex; align-items:center; gap:12px;
+  padding:24px 17px 0;
+}
+.me-avatar {
+  width:80px; height:80px; border-radius:50%;
+  overflow:hidden; flex-shrink:0;
+}
+.me-avatar img { width:100%; height:100%; object-fit:cover; }
+.me-name {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:18px; font-weight:700; color:#000;
+}
+.me-phone {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:13px; font-weight:700; color:#000; margin-top:2px;
+}
+
+/* VIP Card */
+.me-vip-card {
+  margin:20px 15px 0; height:168px; border-radius:12px;
+  overflow:hidden; position:relative;
+}
+.me-vip-card img { width:100%; height:100%; object-fit:cover; }
+
+/* Stats bar */
+.me-stats {
+  margin:20px 15px 0; background:#fff; border-radius:12px;
+  height:81px; display:flex; align-items:center;
+}
+.me-stat-item { flex:1; text-align:center; }
+.me-stat-num {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:24px; font-weight:500; color:#000;
+}
+.me-stat-unit {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:500; color:#B4B4B4;
+}
+.me-stat-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:400; color:#000; margin-top:2px;
+}
+.me-stat-divider { width:1px; height:54px; background:#E5E5E5; }
+
+/* Favorites section */
+.me-fav {
+  margin:20px 15px 0; background:#fff; border-radius:12px;
+  padding:16px;
+}
+.me-fav-title {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:500; color:#000; margin-bottom:12px;
+}
+.me-fav-item { display:flex; align-items:center; gap:12px; }
+.me-fav-item + .me-fav-item { margin-top:12px; padding-top:12px; border-top:1px solid #F5F5F5; }
+.me-fav-thumb {
+  width:76px; height:76px; border-radius:13px; background:#FAEDDD;
+  overflow:hidden; flex-shrink:0;
+}
+.me-fav-thumb img { width:100%; height:100%; object-fit:contain; }
+.me-fav-info { flex:1; min-width:0; }
+.me-fav-name {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:500; color:#000;
+}
+.me-fav-spec {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:10px; font-weight:500; color:#B4B4B4; margin-top:2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.me-fav-rebuy {
+  width:83px; height:30px; border-radius:15px; background:#CA2525;
+  border:none; cursor:pointer;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:500; color:#fff; flex-shrink:0;
+}
+.me-fav-rebuy:active { opacity:0.85; }
+
+/* Menu list */
+.me-menu { margin:12px 15px 20px; background:#fff; border-radius:12px; padding:0 12px; }
+.me-menu-row {
+  display:flex; align-items:center; height:54px; cursor:pointer;
+}
+.me-menu-row:active { opacity:0.6; }
+.me-menu-row + .me-menu-row { border-top:1px solid #F5F5F5; }
+.me-menu-arrow {
+  width:16px; height:16px; margin-left:4px; flex-shrink:0;
+}
+.me-menu-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:500; color:#000; flex:1;
+}
+.me-menu-sub {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:500; color:#B4B4B4;
+}
+
+#page-me .ph-title, #page-me .ph-sub { display:none; }
+.order-top-bar {
+  width:402px; height:94px;
+  position:sticky; top:0; z-index:5;
+  background:#fff;
+  display:flex; align-items:flex-end; justify-content:center;
+  padding-bottom:12px;
+}
+.order-top-title {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:20px; font-weight:500; color:#CA2626;
+}
+/* Order Card */
+.order-list { padding:23px 21px 100px; display:flex; flex-direction:column; gap:12px; }
+.order-card {
+  background:#fff; border-radius:12px; padding:17px 16px 16px;
+  position:relative;
+}
+.order-card-header {
+  display:flex; align-items:center; gap:8px; margin-bottom:4px;
+}
+.order-store-name {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:400; color:#000;
+}
+.order-dine-tag {
+  height:22px; padding:0 10px; border-radius:23px; background:#CA2525;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:400; color:#fff;
+  display:flex; align-items:center;
+}
+.order-status {
+  position:absolute; right:16px; top:17px;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; color:#B4B4B4;
+}
+.order-date {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; color:#B4B4B4; margin-bottom:8px;
+}
+.order-number-badge {
+  position:absolute; right:16px; top:40px;
+  height:18px; padding:0 6px; border-radius:2px;
+  background:#FACC15;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:8px; color:#000;
+  display:flex; align-items:center;
+}
+
+/* Order item thumbnails */
+.order-items-row {
+  display:flex; gap:9px; margin-bottom:8px; flex-wrap:wrap;
+}
+.order-item-thumb {
+  width:67px; height:67px; border-radius:13px; overflow:hidden;
+  background:#FAEDDD; flex-shrink:0;
+}
+.order-item-thumb img {
+  width:100%; height:100%; object-fit:contain;
+}
+
+/* Order card footer */
+.order-card-footer {
+  display:flex; align-items:center; justify-content:flex-end;
+}
+.order-total {
+  position:absolute; right:16px; top:87px;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:400; color:#000;
+}
+.order-rebuy-btn {
+  width:83px; height:30px; border-radius:15px; background:#CA2525;
+  border:none; cursor:pointer;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:400; color:#fff;
+}
+.order-rebuy-btn:active { opacity:0.85; }
+
+.order-load-more {
+  text-align:center; padding:0 0 20px;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:10px; color:#B4B4B4;
+}
+
+.order-empty {
+  text-align:center; padding:200px 0;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+}
+.order-empty-row {
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:40px;
+}
+.order-empty-line {
+  width:40px; height:1px; background:#B4B4B4;
+  flex-shrink:0;
+}
+.order-empty-text {
+  font-size:16px; color:#B4B4B4; margin:0 12px;
+}
+.order-pig-stamp {
+  width:100px; height:131px; display:block; margin:0 auto;
+  opacity:0.4;
+}
+
+#page-order .ph-title, #page-me .ph-title {
+  font-family:'Songti TC','STSong',serif;
+  font-size:36px; color:#FBE7CA;
+  margin-bottom:16px;
+}
+#page-order .ph-sub, #page-me .ph-sub {
+  font-family:'PingFang SC',sans-serif;
+  font-size:16px; color:rgba(255,255,255,0.4);
+}
+
+/* ===== Menu Page ===== */
+#page-menu {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:10; overflow:hidden;
+  display:none;
+}
+@keyframes pageFadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+.app.on-menu .bg-photo,
+.app.on-menu .price-tag,
+.app.on-menu .seg-control,
+.app.on-menu .jiaotou-title,
+.app.on-menu .jiaotou-layer,
+.app.on-menu .bowl-area,
+.app.on-menu .random-btn,
+.app.on-menu .condiment-scroll,
+.app.on-menu .btn-enter-menu,
+.app.on-menu .btn-cart,
+.app.on-menu .sec-label { display:none !important; }
+
+.menu-top-bar {
+  position:absolute; top:0; left:0;
+  width:402px; height:100px;
+  z-index:15;
+}
+.menu-top-search {
+  position:absolute; left:0; top:0;
+  width:402px; height:101px;
+}
+
+.menu-dine-toggle {
+  position:absolute; left:20px; top:33px;
+  width:74px; height:18px; cursor:pointer;
+  border-radius:17.5px;
+  border:1px solid #fff; z-index:14;
+  overflow:hidden;
+  display:flex; align-items:center;
+}
+.dine-pill {
+  position:absolute; width:40px; height:100%;
+  background:#fff; border-radius:17.5px;
+  transition:left 200ms ease;
+}
+.dine-pill.right { left:34px; }
+.dine-text {
+  flex:1; text-align:center;
+  font-family:'PingFang SC',sans-serif;
+  font-size:10px; line-height:18px;
+  position:relative; z-index:1;
+  transition:color 200ms;
+}
+.dine-text.on  { font-weight:700; color:#CA2626; }
+.dine-text.off { font-weight:400; color:#fff; }
+.menu-store-name {
+  position:absolute; left:20px; top:7px; z-index:14;
+  font-family:'PingFang SC',sans-serif;
+  font-size:16px; font-weight:700; color:#fff;
+  white-space:nowrap;
+}
+.menu-distance {
+  position:absolute; left:117px; top:35px; z-index:14;
+  font-family:'PingFang SC',sans-serif;
+  font-size:10px; font-weight:700; color:#fff;
+}
+.menu-search-icon {
+  position:absolute; right:16px; top:52px;
+  width:18px; height:18px; cursor:pointer;
+}
+
+.menu-ad-banner {
+  width:402px; height:324px;
+  overflow:hidden; position:relative; flex-shrink:0;
+}
+.ad-bg-img {
+  position:absolute; left:0; top:0;
+  width:402px; height:324px;
+}
+.menu-ad-banner .ad-bg {
+  position:absolute; left:0; top:0;
+  width:100%; height:100%;
+  object-fit:cover; opacity:0.25;
+}
+.menu-ad-banner .ad-tagline1 {
+  position:absolute; left:28px; top:40px;
+  font-family:'Songti TC','STSong',serif;
+  font-size:28px; font-weight:700;
+  color:#FBE7CA; letter-spacing:2px;
+}
+.menu-ad-banner .ad-tagline2 {
+  position:absolute; left:28px; top:76px;
+  font-family:'Songti TC','STSong',serif;
+  font-size:16px; font-weight:400;
+  color:rgba(251,231,202,0.8); letter-spacing:1px;
+}
+.menu-ad-banner .ad-features {
+  position:absolute; left:28px; bottom:40px;
+  display:flex; gap:18px;
+}
+.menu-ad-banner .ad-feat {
+  font-family:'PingFang SC',sans-serif;
+  font-size:12px; color:rgba(255,255,255,0.85);
+  background:rgba(255,255,255,0.15);
+  padding:4px 12px; border-radius:12px;
+  white-space:nowrap;
+}
+
+/* body: sidebar + scroll area */
+.menu-body {
+  position:absolute; left:0; top:100px;
+  width:402px; bottom:0;
+  z-index:10; overflow-y:auto; overflow-x:hidden;
+  background:#f7f0e8;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:110px;
+}
+.menu-body::-webkit-scrollbar { display:none; }
+
+/* category sidebar */
+.category-sidebar {
+  position:absolute; left:9px; top:404px;
+  z-index:12;
+  display:flex; flex-direction:column;
+  gap:30px; padding:18px 0 4px 0;
+  background:#f7f0e8; width:48px;
+}
+.cat-tab {
+  width:48px; height:49px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.cat-tab img { width:48px; height:49px; object-fit:contain; }
+
+/* menu scroll */
+.menu-scroll {
+  margin-left:72px; margin-top:-20px; min-width:0;
+  padding:13px 4px 12px 4px;
+}
+
+/* menu card */
+.menu-card {
+  width:320px; height:118px;
+  margin:0 auto 12px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+  border-radius:12px; overflow:hidden;
+}
+.menu-card > img {
+  width:100%; height:100%;
+  object-fit:contain; display:block;
+}
+.menu-card.bounce {
+  animation: cardBounce 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes cardBounce {
+  0%   { transform:scale(1); }
+  40%  { transform:scale(1.06); }
+  100% { transform:scale(1); }
+}
+.card-spec-hitarea {
+  position:absolute; right:0; bottom:0;
+  width:72px; height:36px;
+  z-index:2;
+}
+
+/* drink/addon qty controls on menu card */
+.menu-qty-ctrl {
+  position:absolute; right:8px; bottom:11px;
+  display:flex; align-items:center; gap:5px;
+  z-index:2;
+}
+.menu-qty-ctrl .mqty-btn {
+  width:16px; height:16px; cursor:pointer; flex-shrink:0;
+}
+.menu-qty-ctrl .mqty-num {
+  font-size:12px; font-weight:400; color:#000;
+  min-width:14px; text-align:center;
+}
+
+.menu-cat-header {
+  font-family:'Songti TC','STSong',serif;
+  font-size:16px; font-weight:700;
+  color:#4A3728;
+  padding:10px 0 8px 8px;
+  position:sticky; top:0; z-index:1;
+  background:#f7f0e8;
+}
+
+/* ===== Menu Bottom Price Bar (Figma: 价格浮窗) ===== */
+.menu-bottom-bar {
+  position:absolute; left:16px; top:752px;
+  width:370px; height:49px;
+  background:#fff;
+  border-radius:24.5px;
+  z-index:13;
+  display:none;
+  align-items:center;
+  box-shadow:0 1px 10px rgba(0,0,0,0.10);
+}
+.app.on-menu .menu-bottom-bar { display:flex; }
+
+.menu-bottom-bar .bb-icon {
+  width:60px; height:60px; flex-shrink:0;
+  position:relative; margin-left:5px; margin-top:-5px;
+}
+.menu-bottom-bar .bb-icon.small {
+  width:31px; height:31px; margin-left:19px; margin-top:0;
+}
+.menu-bottom-bar .bb-icon img {
+  width:100%; height:100%;
+}
+.menu-bottom-bar .bb-badge {
+  position:absolute; left:47px; top:5px;
+  width:13px; height:13px;
+  background:#CA2626; border-radius:50%;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:7px; font-weight:700; color:#fff;
+  display:none; align-items:center; justify-content:center;
+  line-height:1;
+}
+.menu-bottom-bar .bb-badge.show { display:flex; }
+.menu-bottom-bar .bb-icon.small .bb-badge {
+  left:33px; top:-1px;
+}
+.menu-bottom-bar .bb-price {
+  font-family:'Inter','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:400; color:#000;
+  white-space:nowrap; margin-left:5px;
+}
+.menu-bottom-bar .bb-price.has-items {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:400; margin-left:20px;
+}
+.menu-bottom-bar .bb-price .sym {
+  font-size:10px;
+}
+.menu-bottom-bar .bb-price .num {
+  font-size:20px; font-weight:400;
+}
+.menu-bottom-bar .bb-btn {
+  position:absolute; right:5px; top:4px;
+  width:107px; height:40px; flex-shrink:0;
+  background:#CA2626; color:#fff;
+  border-radius:22px; border:none;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:17.5px; font-weight:700;
+  cursor:pointer; opacity:0.6;
+  transition:opacity 0.2s;
+}
+.menu-bottom-bar .bb-btn.on { opacity:1; }
+.menu-bottom-bar .bb-btn:active { opacity:0.8; }
+
+/* ===== Cart Panel (Figma: 菜单页购物车) ===== */
+.cart-overlay {
+  position:absolute; left:0; top:0;
+  width:402px; height:813px;
+  z-index:100; display:none;
+  background:rgba(0,0,0,0.85);
+}
+.cart-overlay.open { display:block; }
+
+.cart-sheet {
+  position:absolute; left:0; right:0;
+  top:505px; bottom:59px;
+  background:#fff;
+  border-radius:12px 12px 0 0;
+  z-index:101; display:none;
+  flex-direction:column;
+  overflow:hidden;
+}
+.cart-sheet.open { display:flex; }
+
+.cart-sheet-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 17px 0; flex-shrink:0;
+}
+.cart-sheet-title {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:700; color:#000;
+}
+.cart-sheet-clear {
+  height:16px; cursor:pointer;
+}
+.cart-sheet-divider {
+  width:368px; height:0.5px; background:#B4B4B4;
+  margin:16px 17px 0; flex-shrink:0;
+}
+.cart-sheet-list {
+  flex:1; overflow-y:auto; padding:0 17px 12px;
+  -webkit-overflow-scrolling:touch;
+}
+.cart-sheet-list::-webkit-scrollbar { display:none; }
+
+.cart-item {
+  display:flex; align-items:center; padding:10px 0;
+  border-bottom:0.5px solid #f5f5f5; gap:10px;
+}
+.cart-item:last-child { border-bottom:none; }
+.cart-item-img {
+  width:68px; height:68px; flex-shrink:0;
+  border-radius:8px; overflow:hidden;
+}
+.cart-item-img img {
+  width:100%; height:100%; object-fit:contain;
+}
+.cart-item-info { flex:1; min-width:0; }
+.cart-item-name {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:400; color:#000;
+}
+.cart-item-price {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; color:#808080; margin-top:4px;
+}
+.cart-item-spec {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:10px; color:#999; margin-top:2px;
+  line-height:1.4;
+}
+.cart-item-qty {
+  display:flex; align-items:center; gap:12px; flex-shrink:0;
+}
+.cart-item-qty img { width:24px; height:24px; cursor:pointer; }
+.cart-item-qty span { font-size:14px; min-width:16px; text-align:center; }
+
+.cart-sheet-sep {
+  height:0.5px; background:#B4B4B4;
+  margin:0 16px 5px; flex-shrink:0;
+}
+.cart-sheet-bottom {
+  display:flex; align-items:center;
+  padding:0 16px; height:49px; flex-shrink:0;
+  background:#fff; margin-bottom:10px;
+}
+.cart-sheet-bottom .cs-icon {
+  width:30px; height:30px; flex-shrink:0;
+  position:relative; margin-right:9px;
+}
+.cart-sheet-bottom .cs-icon img { width:100%; height:100%; }
+.cart-sheet-bottom .cs-badge {
+  position:absolute; left:27px; top:3px;
+  width:13px; height:13px;
+  background:#CA2626; border-radius:50%;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:7px; font-weight:600; color:#fff;
+  display:none; align-items:center; justify-content:center;
+  line-height:1;
+}
+.cart-sheet-bottom .cs-badge.show { display:flex; }
+.cart-sheet-bottom .cs-price {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:700; color:#000;
+  flex:1; white-space:nowrap;
+}
+.cart-sheet-bottom .cs-price .sym { font-size:10px; }
+.cart-sheet-bottom .cs-price .num { font-size:20px; font-weight:500; }
+.cart-sheet-bottom .cs-btn {
+  width:98px; height:38px; flex-shrink:0;
+  background:#CA2626; color:#fff;
+  border-radius:19px; border:none;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:600;
+  cursor:pointer; opacity:0.6;
+}
+.cart-sheet-bottom .cs-btn.on { opacity:1; margin-left:95px; }
+.cart-sheet-bottom .cs-btn:active { opacity:0.8; }
+
+/* ===== Confirm Order Page ===== */
+#page-confirm {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:18; display:none;
+  background:#fff url('确认订单/确认订单背景.webp') no-repeat center top;
+  background-size:402px auto;
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+html.webp #page-confirm {
+  background-image:url('确认订单/确认订单背景.webp');
+}
+#page-confirm.show { display:block; }
+#page-confirm::-webkit-scrollbar { display:none; }
+
+.confirm-top {
+  width:402px; height:94px;
+  position:sticky; top:0; z-index:5;
+  background:url('确认订单/确认订单页标题栏.webp') no-repeat center/cover;
+}
+html.webp .confirm-top {
+  background-image:url('确认订单/确认订单页标题栏.webp');
+}
+.confirm-top-title { display:none; }
+.confirm-back-btn {
+  position:absolute; left:16px; top:48px;
+  width:34px; height:34px; cursor:pointer;
+  opacity:0; z-index:10;
+}
+.confirm-back-arrow {
+  width:8px; height:16px;
+}
+.confirm-title {
+  position:absolute; left:50%; top:51px;
+  transform:translateX(-50%);
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:20px; font-weight:500; color:#000;
+  z-index:10;
+}
+.waiting-top {
+  width:402px; height:94px;
+  position:absolute; top:0; z-index:10;
+  background:transparent;
+}
+.waiting-back-btn {
+  position:absolute; left:16px; top:48px;
+  width:34px; height:34px; cursor:pointer; z-index:10;
+}
+.waiting-top-title {
+  position:absolute; left:50%; top:51px;
+  transform:translateX(-50%);
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:20px; font-weight:500; color:#fff;
+  z-index:10;
+}
+.confirm-body {
+  padding:0 15px 100px;
+}
+.confirm-section {
+  background:#F9F9F9; border-radius:12px;
+  margin-bottom:12px; overflow:hidden;
+}
+
+/* Dine/Takeout toggle */
+.confirm-dine-toggle {
+  display:flex; gap:9px; margin-bottom:12px;
+  background:#F9F9F9; border-radius:12px; overflow:hidden;
+  height:86px; align-items:center; justify-content:center;
+}
+.confirm-dine-option {
+  width:164px; height:61px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.confirm-dine-option img {
+  width:164px; height:61px; object-fit:contain;
+}
+
+/* Pickup time */
+.confirm-pickup {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 11px; height:61px;
+}
+.confirm-pickup-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:400; color:#000;
+}
+.confirm-pickup-value {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:400; color:#CA2626;
+  display:flex; align-items:center; gap:4px;
+}
+.confirm-pickup-value img { width:17px; height:17px; }
+.confirm-pickup-value span { margin-right:4px; }
+
+/* Order items */
+.confirm-section-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:15px 11px 0;
+}
+.confirm-section-header.compact {
+  padding:12px 11px 0;
+}
+.confirm-section-title {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:400; color:#000;
+}
+.confirm-section-title.small {
+  font-size:12px; line-height:17px;
+}
+.confirm-order-item {
+  display:flex; padding:12px 11px; gap:10px;
+  border-bottom:1px solid #eee;
+}
+.confirm-order-item:last-of-type { border-bottom:none; }
+.confirm-order-item-img {
+  width:95px; height:95px; flex-shrink:0;
+  border-radius:8px; overflow:hidden;
+}
+.confirm-order-item-img img {
+  width:100%; height:100%; object-fit:contain;
+}
+.confirm-order-item-info {
+  flex:1; min-width:0; display:flex; flex-direction:column;
+  justify-content:center;
+}
+.confirm-order-item-name {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:15px; font-weight:400; color:#000;
+}
+.confirm-order-item-specs {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:10px; font-weight:400; color:#C4C4C4;
+  margin-top:4px; line-height:1.4;
+}
+.confirm-order-item-right {
+  display:flex; flex-direction:column; align-items:flex-end;
+  justify-content:center; flex-shrink:0;
+}
+.confirm-order-item-price {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:400; color:#CA2525;
+}
+.confirm-order-item-qty {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:400; color:#B3B3B3;
+  margin-top:4px;
+}
+.confirm-order-divider {
+  height:1px; background:#eee; margin:0 11px;
+}
+.confirm-order-subtotal {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 11px 12px;
+}
+.confirm-takeout-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 11px; font-size:13px; color:#999;
+}
+.confirm-takeout-row span:last-child { color:#CA2626; }
+.confirm-order-subtotal-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:400; color:#000;
+}
+.confirm-order-subtotal-price {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:400; color:#000;
+}
+
+/* Recommended add-ons */
+.confirm-addons {
+  display:flex; gap:0; overflow-x:auto;
+  padding:12px 11px 16px;
+  -webkit-overflow-scrolling:touch;
+}
+.confirm-addons::-webkit-scrollbar { display:none; }
+.confirm-addon-card {
+  width:113px; height:160px; flex-shrink:0; margin-right:12px;
+  cursor:pointer; position:relative;
+}
+.confirm-addon-card:last-child { margin-right:0; }
+.confirm-addon-card img.addon-hero {
+  width:113px; height:160px; object-fit:contain;
+  display:block;
+}
+.addon-ctrl {
+  position:absolute; right:8px; bottom:11px;
+  display:flex; align-items:center; gap:5px;
+}
+.addon-minus, .addon-plus {
+  width:16px; height:16px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.addon-minus { display:none; }
+.addon-minus.show { display:block; }
+.addon-qty {
+  display:none;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:400; color:#000;
+}
+.addon-qty.show { display:block; }
+
+/* Price summary rows */
+.confirm-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 11px; height:50px;
+}
+.confirm-row.small {
+  height:39px;
+}
+.confirm-row-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:14px; font-weight:500; color:#000;
+}
+.confirm-row-value {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:17px; font-weight:500; color:#000;
+}
+.confirm-row-value.sub {
+  font-size:10px; color:#808080; display:flex; align-items:center; gap:4px;
+}
+.confirm-row-value.sub img { width:12px; height:12px; }
+.confirm-divider {
+  height:1px; background:#eee; margin:0 11px;
+}
+
+/* Payment method */
+.confirm-payment {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 11px; height:52px;
+}
+.confirm-payment-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:400; color:#000;
+}
+.confirm-payment-right {
+  display:flex; align-items:center; gap:2px;
+}
+.confirm-payment-text {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:10px; font-weight:400; color:#000;
+  margin:0 4px;
+}
+.confirm-payment-icon {
+  width:26px; height:26px; flex-shrink:0;
+}
+.confirm-payment-icon img { width:100%; height:100%; }
+
+/* Notes */
+.confirm-notes {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 11px; height:52px;
+}
+.confirm-notes-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:400; color:#000;
+}
+.confirm-arrow {
+  flex-shrink:0;
+}
+
+/* Bottom bar */
+.confirm-bottom-bar {
+  position:sticky; bottom:0;
+  width:402px; height:91px;
+  background:#fff;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.06);
+  z-index:2;
+  display:flex; align-items:center;
+  padding:0 23px; flex-shrink:0;
+}
+.confirm-total-label {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:20px; font-weight:400; color:#CA2626;
+  flex:1;
+}
+.confirm-pay-btn {
+  width:122px; height:45px; flex-shrink:0;
+  background:#CA2626; border-radius:24px; border:none;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:400; color:#fff;
+  cursor:pointer;
+}
+.confirm-pay-btn:active { opacity:0.85; }
+
+/* pig stamp at bottom of menu scroll */
+.menu-pig-stamp {
+  width:100px; height:131px;
+  margin:24px auto 30px;
+  display:block;
+}
+
+/* ===== Detail Page Overlay ===== */
+#page-detail {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:18; display:none;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+#page-detail.show { display:block; }
+#page-detail::-webkit-scrollbar { display:none; }
+.detail-backdrop {
+  display:none;
+}
+.detail-hero {
+  width:402px;
+  position:relative; z-index:0;
+}
+.detail-hero img {
+  width:100%; display:block;
+}
+.detail-hero .detail-back-btn {
+  position:absolute; left:16px; top:48px;
+  width:34px; height:34px; cursor:pointer;
+  z-index:2;
+}
+.detail-scroll {
+  background:#fff;
+  border-radius:12px 12px 0 0;
+  margin-top:-36px;
+  position:relative;
+  z-index:1;
+}
+.detail-scroll::-webkit-scrollbar { display:none; }
+
+/* Combo body */
+.detail-combo-body {
+  padding:32px 24px 24px;
+}
+
+/* bottom bar */
+.detail-bottom-bar {
+  position:sticky; bottom:0;
+  width:402px; height:132px;
+  background:#fff;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.06);
+  z-index:3;
+  padding:14px 23px 0;
+}
+.detail-title {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:20px; font-weight:600; color:rgba(0,0,0,0.80);
+  margin-bottom:2px;
+}
+.detail-subtitle {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:12px; font-weight:600; color:#B3B3B3;
+  margin-bottom:18px;
+}
+.detail-section-heading {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:400; color:rgba(0,0,0,0.80);
+  margin:17px 0 12px 0;
+}
+.combo-card {
+  display:inline-block;
+  width:117px; vertical-align:top; margin-right:10px; margin-bottom:10px;
+  cursor:default;
+}
+.combo-card.modifiable { cursor:pointer; }
+.combo-card.bounce {
+  animation: cardBounce 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.combo-card.toggleable { cursor:pointer; }
+.combo-card.pick-one { cursor:pointer; }
+.combo-card img { display:block; }
+.combo-card.card-main img { width:117px; height:172px; }
+.combo-card.card-side img { width:117px; height:151px; }
+
+/* Spec selector popup */
+.spec-overlay {
+  position:absolute; left:0; top:0; width:402px; height:874px;
+  z-index:25; background:rgba(0,0,0,0.55);
+  display:flex; align-items:center; justify-content:center;
+}
+.spec-modal {
+  width:380px; max-height:628px;
+  background:#fff; border-radius:12px; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.spec-close-bar {
+  display:flex; justify-content:center; padding:12px 0 4px;
+}
+.spec-close-bar span {
+  display:block; width:36px; height:5px; border-radius:3px; background:#ddd;
+}
+.spec-scroll {
+  flex:1; overflow-y:auto; padding:0 20px 16px;
+  -webkit-overflow-scrolling:touch;
+}
+.spec-scroll::-webkit-scrollbar { display:none; }
+.spec-title {
+  font-family:'PingFang SC',sans-serif; font-size:19px; font-weight:700;
+  color:#000; margin-bottom:2px;
+}
+.spec-desc {
+  font-size:12px; color:#B3B3B3; margin-bottom:14px; line-height:1.4;
+}
+.spec-heading {
+  font-family:'PingFang SC',sans-serif; font-size:13px; font-weight:400;
+  color:#000; margin:12px 0 8px;
+}
+.spec-pills { display:flex; flex-wrap:wrap; gap:8px; }
+.spec-pill {
+  display:inline-flex; align-items:center; justify-content:center;
+  height:28px; min-width:68px; padding:0 14px;
+  box-sizing:border-box;
+  border-radius:59px; cursor:pointer;
+  font-family:'PingFang SC',sans-serif; font-size:11px; font-weight:500;
+  border:1px solid #000; background:#fff; color:#000;
+  -webkit-tap-highlight-color:transparent;
+  transition:background 0.15s, color 0.15s, border-color 0.15s;
+}
+.spec-pill.on {
+  background:#CA2626; border-color:#CA2626; color:#fff;
+}
+.spec-pill.has-price { padding-right:10px; }
+.spec-price {
+  font-family:'PingFang SC',sans-serif; font-size:11px; font-weight:500;
+  color:#000; margin-left:4px;
+}
+.spec-pill.on .spec-price { color:#fff; }
+.spec-confirm-wrap { padding:14px 20px 18px; flex-shrink:0; display:flex; align-items:center; gap:12px; }
+.spec-total-price {
+  font-family:'PingFang SC',sans-serif; font-size:18px; font-weight:700;
+  color:#CA2626; white-space:nowrap;
+}
+.spec-total-price .sym { font-size:14px; }
+.spec-confirm-btn {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  height:50px; background:#CA2626; border-radius:25px;
+  border:none; cursor:pointer;
+  font-family:'PingFang SC',sans-serif; font-size:20px; font-weight:700;
+  color:#fff; -webkit-tap-highlight-color:transparent;
+}
+.spec-confirm-btn:active { opacity:0.85; }
+
+.detail-price-col {
+  display:inline-block; vertical-align:top;
+}
+.detail-price-label {
+  display:block;
+  font-family:'PingFang SC',sans-serif;
+  font-size:12px; color:#A8A8A8;
+}
+.detail-bottom-bar .detail-price {
+  font-family:'PingFang SC',sans-serif;
+  font-size:20px; font-weight:400; color:rgba(0,0,0,0.80);
+  line-height:28px;
+}
+.detail-qty-row {
+  display:flex; align-items:center; gap:12px;
+  float:right; margin-top:4px;
+}
+.detail-qty-row img {
+  width:24px; height:24px; cursor:pointer;
+}
+.detail-qty-row .detail-qty-num {
+  font-size:16px; font-weight:400; color:rgba(0,0,0,0.80); min-width:12px; text-align:center;
+}
+.detail-add-cart-btn {
+  position:absolute; left:23px; right:23px; bottom:18px;
+  height:50px; cursor:pointer;
+}
+.detail-add-cart-btn img { width:100%; height:100%; display:block; }
+.detail-add-cart-btn:active { opacity:0.85; }
+
+/* ===== Toast ===== */
+.toast {
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.78); color:#fff;
+  padding:10px 24px; border-radius:20px;
+  font-size:15px; z-index:20;
+  pointer-events:none;
+  opacity:0; transition:opacity 0.25s;
+}
+.toast.show { opacity:1; }
+
+/* ===== Splash Ad Overlay ===== */
+.splash-ad {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:200;
+  background:transparent;
+  perspective:600px;
+  opacity:1;
+  transition:opacity 0.5s ease;
+}
+.splash-ad.hide {
+  opacity:0;
+  pointer-events:none;
+}
+
+/* Black curtain behind doors */
+.splash-curtain {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  background:#000;
+  z-index:0;
+  transition: opacity 6s ease;
+}
+.splash-ad.fly-away .splash-curtain {
+  opacity:0;
+}
+
+/* Double-door: split from center */
+.splash-door {
+  position:absolute; top:0;
+  width:50%; height:874px;
+  overflow:hidden;
+  backface-visibility:hidden;
+  transition: transform 3s cubic-bezier(0.25, 0.1, 0.25, 1), filter 2.5s ease;
+}
+.splash-door-left {
+  left:0;
+  transform-origin: left center;
+}
+.splash-door-right {
+  left:50%;
+  transform-origin: right center;
+}
+.splash-bg-left {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  object-fit:cover;
+}
+.splash-bg-right {
+  position:absolute; left:-100%; top:0;
+  width:402px; height:874px;
+  object-fit:cover;
+}
+
+/* Door open — translate out + rotate + scale + darken */
+.splash-ad.fly-away .splash-door-left {
+  transform: translateX(-105%) rotateY(120deg) scale(2.5);
+  filter: brightness(0.2);
+}
+.splash-ad.fly-away .splash-door-right {
+  transform: translateX(105%) rotateY(-120deg) scale(2.5);
+  filter: brightness(0.2);
+}
+
+.splash-noodle-img {
+  position:absolute; left:-64px; top:184px;
+  width:560px; height:560px;
+  object-fit:contain;
+}
+.splash-noodle-img.fly-to-bowl {
+  animation: flyToBowl 5s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes flyToBowl {
+  0%   { left:-64px; top:184px; width:560px; height:560px; opacity:1; }
+  24%  { left:101px; top:237px; width:200px; height:200px; opacity:1; }
+  40%  { left:-12px; top:143px; width:450px; height:450px; opacity:1; }
+  55%  { left:-12px; top:143px; width:450px; height:450px; opacity:1; }
+  100% { left:-12px; top:143px; width:450px; height:450px; opacity:0; }
+}
+
+.splash-ad.fly-away .splash-btn-custom,
+.splash-ad.fly-away .splash-btn-cancel {
+  opacity:0; transition: opacity 0.5s ease;
+}
+.splash-btn-custom {
+  position:absolute; left:76px; top:638px;
+  width:250px; height:auto;
+  cursor:pointer; z-index:1;
+}
+.splash-btn-cancel {
+  position:absolute; left:179px; top:732px;
+  width:45px; height:45px;
+  cursor:pointer; z-index:1;
+}
+.splash-btn-custom:active { opacity:0.8; }
+.splash-btn-cancel:active { opacity:0.8; }
+
+/* ===== Loading Page ===== */
+#loadingPage {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:500;
+  background:#1a1a1a;
+  display:flex; flex-direction:column;
+  justify-content:center; align-items:center;
+  transition: opacity 0.5s ease;
+}
+#loadingPage.hide {
+  opacity:0; pointer-events:none;
+}
+#loadingPage.done {
+  display:none;
+}
+.loading-brand {
+  width:200px; height:auto;
+  margin-bottom:40px;
+}
+.loading-bar-track {
+  width:280px; height:6px;
+  background:rgba(255,255,255,0.15);
+  border-radius:3px;
+  overflow:hidden;
+}
+.loading-bar-fill {
+  height:100%; width:0%;
+  background: linear-gradient(90deg, #CA2626, #e84848);
+  border-radius:3px;
+  transition: width 0.3s ease;
+}
+.loading-pct {
+  margin-top:12px;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:13px; font-weight:500;
+  color:rgba(255,255,255,0.5);
+}
+.loading-tip {
+  margin-top:8px;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:11px; font-weight:400;
+  color:rgba(255,255,255,0.25);
+}
+
+/* ===== Pig Runner Waiting Game ===== */
+#page-waiting {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:300; display:none;
+  background:transparent;
+}
+#page-waiting.show { display:block; }
+#dino-bg-cv {
+  display:block; width:412px; height:874px;
+  position:absolute; left:-5px; top:0; z-index:1; pointer-events:none;
+}
+#dino-game-cv {
+  display:block; width:402px; height:874px;
+  position:absolute; left:0; top:0; z-index:5; pointer-events:none;
+}
+#dino-loading {
+  position:absolute; left:0; top:0; width:100%; height:100%;
+  display:flex; justify-content:center; align-items:center;
+  color:#fff; font-size:20px; z-index:99;
+  background:rgba(0,0,0,0.5);
+}
+#dino-scroll {
+  position:absolute; z-index:2;
+  overflow-y:auto; overflow-x:hidden;
+  pointer-events:auto;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+#dino-scroll::-webkit-scrollbar { display:none; }
+#dino-scroll-inner { position:relative; width:402px; }
+#dino-brown-overlay {
+  position:absolute; left:0; bottom:0; width:100%; height:300px; z-index:3;
+  background:linear-gradient(to bottom, transparent 0%, #EFD4B5 100px, #EFD4B5 100%);
+  pointer-events:none;
+}
+.dino-sprite { position:absolute; pointer-events:none; z-index:5; image-rendering:auto; }
+#dino-start-dom { position:absolute; z-index:6; pointer-events:auto; cursor:pointer; }
+#dino-over-btns {
+  display:none; position:absolute; z-index:6; left:0; top:710px;
+  width:100%; justify-content:center; align-items:center; gap:12px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Loading Page -->
+  <div id="loadingPage">
+    <img class="loading-brand" src="导航栏/首页 点击.webp" alt="">
+    <div class="loading-bar-track">
+      <div class="loading-bar-fill" id="loadingBarFill"></div>
+    </div>
+    <div class="loading-pct" id="loadingPct">准备中...</div>
+    <div class="loading-tip" id="loadingTip"></div>
+  </div>
+
+  <!-- Splash Ad Overlay -->
+  <div class="splash-ad" id="splashAd">
+    <div class="splash-curtain"></div>
+    <div class="splash-door splash-door-left">
+      <picture><source srcset="首页广告/首页广告背景.webp" type="image/webp"><img class="splash-bg-left" src="首页广告/首页广告背景.webp"></picture>
+    </div>
+    <div class="splash-door splash-door-right">
+      <picture><source srcset="首页广告/首页广告背景.webp" type="image/webp"><img class="splash-bg-right" src="首页广告/首页广告背景.webp"></picture>
+    </div>
+    <picture><source srcset="首页广告/广告排骨面.webp" type="image/webp"><img class="splash-noodle-img" src="首页广告/广告排骨面.webp"></picture>
+    <picture><source srcset="首页广告/广告定制按钮.webp" type="image/webp"><img class="splash-btn-custom" src="首页广告/广告定制按钮.webp" onclick="dismissSplash('custom')"></picture>
+    <picture><source srcset="首页广告/广告取消按钮.webp" type="image/webp"><img class="splash-btn-cancel" src="首页广告/广告取消按钮.webp" onclick="dismissSplash('cancel')"></picture>
+  </div>
+
+  <div class="app-content">
+  <!-- Full background photo -->
+  <div class="bg-photo"><picture><source srcset="首页底图.webp" type="image/webp"><img src="首页底图.jpg" alt=""></picture></div>
+  <div class="bg-overlay"></div>
+
+
+
+
+  <div class="price-tag" id="priceTag">11</div>
+
+  <!-- 做法 -->
+  <div class="seg-control" id="methodSeg">
+    <div class="seg-pill beige" id="methodPill" style="left:0px;width:35px;"></div>
+    <span class="seg-label" onclick="selectMethod('干')" style="color:#9e5d00">干</span>
+    <span class="seg-label" onclick="selectMethod('湿')" style="color:#fff">湿</span>
+  </div>
+
+  <!-- 种类 -->
+  <div class="seg-control" id="typeSeg">
+    <div class="seg-pill beige" id="typePill" style="left:0px;width:36px;"></div>
+    <span class="seg-label" onclick="selectType('细面')" style="left:5px;color:#9e5d00">细面</span>
+    <span class="seg-label" onclick="selectType('细粉')" style="left:48px;color:#fff">细粉</span>
+    <span class="seg-label" onclick="selectType('刀削面')" style="left:92px;color:#fff">刀削面</span>
+    <span class="seg-label" onclick="selectType('桂林米粉')" style="left:150px;color:#fff">桂林米粉</span>
+  </div>
+
+  <!-- 浇头 - exact Figma positions -->
+  <div class="jiaotou-title">浇头</div>
+  <div class="jiaotou-layer" id="jiaotouLayer"></div>
+
+  <!-- Bowl: broth(0) → noodles(1) → 酸辣粉(2) → other toppings(3) → condiments(4) -->
+  <div class="bowl-area">
+    <img class="bowl-broth"    src="碗/微辣.webp" alt="" id="bowlBroth">
+    <img class="bowl-noodles"  src="面/细面 微辣.webp" alt="" id="bowlNoodles">
+    <div class="bowl-suanlafen" id="bowlSuanlafen"></div>
+    <div class="bowl-toppings" id="bowlToppings"></div>
+    <div class="bowl-condiments" id="bowlCondiments"></div>
+  </div>
+
+  <!-- 份量 -->
+  <div class="seg-control" id="portionSeg">
+    <div class="seg-pill red" id="portionPill" style="left:49px;width:59px;"></div>
+    <span class="seg-label" onclick="selectPortion('中份')" style="color:#9e5d00">中份</span>
+    <span class="seg-label" onclick="selectPortion('大份')" style="color:#e3c9a4">大份</span>
+    <span class="seg-label" onclick="selectPortion('巨大')" style="color:#9e5d00">巨大</span>
+  </div>
+
+  <!-- 辣度 -->
+  <div class="seg-control" id="spiceSeg">
+    <div class="seg-pill red" id="spicePill" style="left:50px;width:59px;"></div>
+    <span class="seg-label" onclick="selectSpice('不辣')" style="color:#9e5d00">不辣</span>
+    <span class="seg-label" onclick="selectSpice('微辣')" style="color:#e3c9a4">微辣</span>
+    <span class="seg-label" onclick="selectSpice('爆辣')" style="color:#9e5d00">爆辣</span>
+  </div>
+
+  <!-- 随机键 -->
+  <div class="random-btn" onclick="randomize(event)"><img src="按钮/随机键.webp" id="randomImg" alt="随机"><div class="random-label">随机</div></div>
+
+  <!-- 小料台 -->
+  <div class="condiment-scroll" id="condimentScroll"></div>
+
+  <!-- Bottom buttons -->
+  <div class="btn-enter-menu" onclick="switchTab('菜单')">
+    <img src="进入菜单.webp" alt="进入菜单">
+  </div>
+  <div class="btn-cart" onclick="smartAddToCart()">
+    <img src="购物车.webp" alt="加入购物车">
+  </div>
+
+  <!-- ===== Menu Page ===== -->
+  <div id="page-menu">
+    <!-- Fixed top bar -->
+    <div class="menu-top-bar">
+      <img class="menu-top-search" src="搜索框.webp" alt="">
+    </div>
+
+    <!-- Body: scrollable (ad banner + sidebar + cards) -->
+    <div class="menu-body">
+      <!-- Ad Banner (scrolls up with content) -->
+      <div class="menu-ad-banner">
+        <!-- Overlay elements on ad area -->
+        <div class="menu-dine-toggle" onclick="toggleDineType()">
+          <div class="dine-pill" id="dinePill"></div>
+          <span class="dine-text on" id="dineText1">堂食</span>
+          <span class="dine-text off" id="dineText2">外带</span>
+        </div>
+        <div class="menu-store-name">古镇曹二市场店</div>
+        <div class="menu-distance">距离739m</div>
+        <img class="ad-bg-img" src="大广告.webp" alt="">
+      </div>
+      <div class="menu-scroll" id="menuScroll"></div>
+    </div>
+    <!-- Sidebar: outside scroll container, absolute positioned -->
+    <div class="category-sidebar" id="categorySidebar">
+      <div class="cat-tab" data-cat="超值套餐" onclick="selectCategory('超值套餐')">
+        <img src="种类/超值套餐（选择后）.webp" alt="超值套餐" id="catImg_超值套餐">
+      </div>
+      <div class="cat-tab" data-cat="畅销榜单" onclick="selectCategory('畅销榜单')">
+        <img src="种类/招牌推荐（选择前）.webp" alt="畅销榜单" id="catImg_畅销榜单">
+      </div>
+      <div class="cat-tab" data-cat="特色小面" onclick="selectCategory('特色小面')">
+        <img src="种类/特色小面（选择前）.webp" alt="特色小面" id="catImg_特色小面">
+      </div>
+      <div class="cat-tab" data-cat="水饺抄手" onclick="selectCategory('水饺抄手')">
+        <img src="种类/水饺抄手（选择前）.webp" alt="水饺抄手" id="catImg_水饺抄手">
+      </div>
+      <div class="cat-tab" data-cat="凉面凉皮" onclick="selectCategory('凉面凉皮')">
+        <img src="种类/凉面凉皮（选择前）.webp" alt="凉面凉皮" id="catImg_凉面凉皮">
+      </div>
+      <div class="cat-tab" data-cat="饮品小料" onclick="selectCategory('饮品小料')">
+        <img src="种类/饮品小料（选择前）.webp" alt="饮品小料" id="catImg_饮品小料">
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Page -->
+  <div id="page-order" style="display:none;">
+    <div class="order-top-bar">
+      <span class="order-top-title">我的订单</span>
+    </div>
+    <div class="order-list" id="orderList"></div>
+    <div class="order-load-more" id="orderLoadMore" style="display:none;">点击或继续滑动加载历史订单~</div>
+  </div>
+  <div id="page-me" style="display:none;">
+    <div class="me-profile">
+      <div class="me-avatar"><img src="头像@4x.webp" alt=""></div>
+      <div>
+        <div class="me-name">死猪逃亡高手</div>
+        <div class="me-phone">177****3333</div>
+      </div>
+    </div>
+    <div class="me-vip-card">
+      <img src="大神卡@4x.webp" alt="大神卡">
+    </div>
+    <div class="me-stats">
+      <div class="me-stat-item">
+        <div><span class="me-stat-num">7</span><span class="me-stat-unit"> 张</span></div>
+        <div class="me-stat-label">卡卷</div>
+      </div>
+      <div class="me-stat-divider"></div>
+      <div class="me-stat-item">
+        <div><span class="me-stat-num">3</span><span class="me-stat-unit"> 张</span></div>
+        <div class="me-stat-label">礼品卡</div>
+      </div>
+      <div class="me-stat-divider"></div>
+      <div class="me-stat-item">
+        <div><span class="me-stat-num">6</span><span class="me-stat-unit"> 张</span></div>
+        <div class="me-stat-label">集卡</div>
+      </div>
+    </div>
+    <div class="me-fav" id="meFav">
+      <div class="me-fav-title">我的最爱</div>
+      <div class="me-fav-list" id="meFavList"></div>
+    </div>
+    <div class="me-menu">
+      <div class="me-menu-row" onclick="switchTab('订单')">
+        <span class="me-menu-label">我的订单</span>
+        <span class="me-menu-sub">查看历史订单</span>
+        <svg class="me-menu-arrow" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="#B4B4B4" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <div class="me-menu-row">
+        <span class="me-menu-label">集卡活动</span>
+        <span class="me-menu-sub">集卡换小料</span>
+        <svg class="me-menu-arrow" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="#B4B4B4" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <div class="me-menu-row">
+        <span class="me-menu-label">会员中心</span>
+        <span class="me-menu-sub">查看会员权益</span>
+        <svg class="me-menu-arrow" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="#B4B4B4" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <div class="me-menu-row">
+        <span class="me-menu-label">发票助手</span>
+        <span class="me-menu-sub">申请电子发票</span>
+        <svg class="me-menu-arrow" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="#B4B4B4" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <div class="me-menu-row">
+        <span class="me-menu-label">联系商家</span>
+        <span class="me-menu-sub">有问题找我们</span>
+        <svg class="me-menu-arrow" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="#B4B4B4" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <div class="me-menu-row">
+        <span class="me-menu-label">意见反馈</span>
+        <span class="me-menu-sub">帮助我们改进</span>
+        <svg class="me-menu-arrow" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="#B4B4B4" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <div class="me-menu-row">
+        <span class="me-menu-label">设置</span>
+        <span class="me-menu-sub">基本设置</span>
+        <svg class="me-menu-arrow" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" stroke="#B4B4B4" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail page overlay -->
+  <div id="page-detail">
+    <div class="detail-hero">
+      <img id="detailImg" src="" alt="">
+      <img class="detail-back-btn" src="返回.webp" alt="" onclick="hideDetailPage()">
+    </div>
+    <div class="detail-scroll" id="detailScroll">
+      <div class="detail-combo-body" id="detailComboBody">
+        <div class="detail-title" id="detailName"></div>
+        <div class="detail-subtitle" id="detailDesc"></div>
+        <div id="detailComboSections"></div>
+      </div>
+    </div>
+    <div class="detail-bottom-bar">
+      <div class="detail-price-col">
+        <span class="detail-price-label">总价</span>
+        <span class="detail-price" id="detailPrice">¥14</span>
+      </div>
+      <div class="detail-qty-row">
+        <img src="详情页/底部按钮/减少.webp" alt="-" onclick="detailChangeQty(-1)">
+        <span class="detail-qty-num" id="detailQty">1</span>
+        <img src="详情页/底部按钮/添加.webp" alt="+" onclick="detailChangeQty(1)">
+      </div>
+      <div class="detail-add-cart-btn" onclick="detailAddToCart()"><img src="详情页/底部按钮/加入购物车.webp" alt="加入购物车"></div>
+    </div>
+  </div>
+
+  
+  <!-- Confirm Order Page -->
+  <div id="page-confirm">
+    <div class="confirm-top">
+      <img class="confirm-back-btn" src="返回.webp" alt="" onclick="hideConfirmPage()">
+      <span class="confirm-top-title">确认订单</span>
+    </div>
+    <div class="confirm-body" id="confirmBody"></div>
+    <div class="confirm-bottom-bar">
+      <span class="confirm-total-label" id="confirmTotal">合计 ¥27.0</span>
+      <button class="confirm-pay-btn" onclick="confirmPay()">立即支付</button>
+    </div>
+  </div>
+
+  <!-- Menu bottom price bar (Figma: 价格浮窗) -->
+  <div class="menu-bottom-bar" id="menuBottomBar" onclick="toggleCartPanel()">
+    <div class="bb-icon">
+      <img id="bbIcon" src="价格浮窗/碗.webp" alt="">
+      <span class="bb-badge" id="bbBadge">1</span>
+    </div>
+    <span class="bb-price" id="bbPrice">未选购商品</span>
+    <button class="bb-btn" id="bbBtn" onclick="event.stopPropagation();goCheckout()">去结算</button>
+  </div>
+
+  <!-- Navigation -->
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+  <div class="bottom-bar"></div>
+  </div><!-- .app-content -->
+
+  <!-- Cart overlay + sheet (outside app-content to avoid stacking context issues) -->
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCartPanel()"></div>
+  <div class="cart-sheet" id="cartSheet" onclick="event.stopPropagation()">
+    <div class="cart-sheet-header">
+      <span class="cart-sheet-title" id="cartSheetTitle">已选0件商品</span>
+      <img class="cart-sheet-clear" src="购物车菜品/清空.webp" alt="清空" onclick="clearCart()">
+    </div>
+    <div class="cart-sheet-divider"></div>
+    <div class="cart-sheet-list" id="cartSheetList"></div>
+    <div class="cart-sheet-sep"></div>
+    <div class="cart-sheet-bottom">
+      <div class="cs-icon">
+        <img id="csIcon" src="价格浮窗/碗.webp" alt="">
+        <span class="cs-badge" id="csBadge">1</span>
+      </div>
+      <span class="cs-price" id="csPrice">未选购商品</span>
+      <button class="cs-btn" id="csBtn" onclick="event.stopPropagation();goCheckout()">去结算</button>
+    </div>
+  </div>
+
+  <!-- Loading overlay (outside app-content) -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <img class="loading-gif" src="小猪搅拌面条.gif" alt="">
+    <span class="loading-text">正在准备美味...</span>
+  </div>
+
+  <!-- Pig Runner Waiting Game (outside app-content, z:300) -->
+  <div id="page-waiting">
+    <div class="waiting-top">
+      <img class="waiting-back-btn" src="返回.webp" alt="" onclick="hideWaitingPage()">
+      <span class="waiting-top-title">确认订单</span>
+    </div>
+    <canvas id="dino-bg-cv" width="402" height="874"></canvas>
+    <canvas id="dino-game-cv" width="402" height="874"></canvas>
+    <div id="dino-scroll"><div id="dino-scroll-inner"></div></div>
+    <div id="dino-brown-overlay"></div>
+    <img class="dino-sprite" id="dino-pig-run" src="" alt="">
+    <img class="dino-sprite" id="dino-pot-s" src="" alt="">
+    <img id="dino-start-dom" src="dino-assets/开始游戏键.webp" alt="开始游戏">
+    <div id="dino-over-btns" style="display:none;">
+      <div id="dino-end-dom" style="height:46px;line-height:46px;padding:0 28px;background:#fff;border-radius:23px;font-size:20px;font-weight:700;color:#CA2626;cursor:pointer;display:inline-flex;align-items:center">结束游戏</div>
+      <img id="dino-replay-dom" src="dino-assets/重玩键.webp" alt="重玩" style="height:46px;cursor:pointer">
+    </div>
+    <div id="dino-loading">加载中...</div>
+  </div>
+
+  <!-- Nav bar (outside app-content to stay above cart sheet) -->
+  <div class="nav-bar-bg"></div>
+  <div class="nav-bar" id="navBar"></div>
+</div>
+
+<script>
+// WebP support detection + path helper
+const supportsWebP = (() => {
+  const c = document.createElement('canvas');
+  return c.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+})();
+const wsrc = p => supportsWebP ? p.replace(/\.(png|jpg|jpeg)$/i, '.webp') : p;
+
+// Patch HTMLImageElement.prototype.src so all img.src = "....webp" auto-use WebP
+if (supportsWebP) {
+  var _srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+  Object.defineProperty(HTMLImageElement.prototype, 'src', {
+    get: _srcDesc.get,
+    set: function(v) { _srcDesc.set.call(this, typeof v === 'string' ? wsrc(v) : v); }
+  });
+  // Re-set src on already-parsed images
+  setTimeout(function(){
+    document.querySelectorAll('img').forEach(function(img){
+      if (/\.(png|jpg|jpeg)$/i.test(img.getAttribute('src')||'')) {
+        img.setAttribute('src', wsrc(img.getAttribute('src')));
+      }
+    });
+  }, 0);
+  document.documentElement.classList.add('webp');
+}
+
+// Background music — Web Audio API with loop points (trim first 1s, last 3s)
+const bgm = {
+  ctx: null, buffer: null, source: null, playing: false, _init: false,
+  async init() {
+    if (this._init) return;
+    this._init = true;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const resp = await fetch('咕噜声.mp4');
+    const data = await resp.arrayBuffer();
+    this.buffer = await this.ctx.decodeAudioData(data);
+  },
+  async play() {
+    if (!this.buffer || this.playing) return;
+    await this.ctx.resume();
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.buffer;
+    src.loop = true;
+    src.loopStart = 0;
+    src.loopEnd = Math.min(20, this.buffer.duration);
+    src.connect(this.ctx.destination);
+    src.start(0, 0);
+    this.source = src;
+    this.playing = true;
+  },
+  stop() {
+    if (!this.playing) return;
+    try { this.source.stop(); } catch(e) {}
+    this.source = null;
+    this.playing = false;
+  }
+};
+
+const state = {
+  noodleType:'细面',
+  method:'干',
+  spice:'微辣',
+  portion:'大份',
+  toppings:[],
+  toppingSlots:{}, // topping name → slot index
+  condiments:[],
+  cart:[],
+  // menu page state
+  dineType:'堂食',
+  menuCart:[], // [{id, name, price, qty, spec}]
+  orderHistory:[], // [{id, store, dineType, date, status, items, total, count}]
+  _menuRendered:false,
+  _manualCatSelect:false,
+  _orderCount:0,
+};
+
+// 碗内10个点位，距离面中心80px一圈均匀分布（192×192 bowl, center 96,96）
+const bowlSlots = (() => {
+  const r = 80, cx = 96, cy = 96;
+  const slots = [];
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    slots.push([Math.round(cx + r * Math.cos(a)), Math.round(cy + r * Math.sin(a))]);
+  }
+  return slots;
+})();
+
+// 浇头 items with exact Figma positions (relative to frame at 53956,14718)
+// Each position matches the Component instances in "首页 最终版"
+const toppingDefs = [
+  {name:'排骨',   u:'浇头ui/排骨 未选中.webp',   s:'浇头ui/排骨 选中.webp',   x:255, y:181, bx:36, by:5},
+  {name:'牛肉',   u:'浇头ui/牛肉 未选中.webp',   s:'浇头ui/牛肉 选中.webp',   x:163, y:137, bx:60, by:40, w:100, h:89},
+  {name:'牛杂',   u:'浇头ui/牛杂未选中.webp',    s:'浇头ui/牛杂 选中.webp',   x:257, y:427, bx:50, by:65},
+  {name:'红烧肉', u:'浇头ui/红烧肉 未选中.webp', s:'浇头ui/红烧肉 选中.webp', x:67,  y:435, bx:36, by:65},
+  {name:'肥肠',   u:'浇头ui/肥肠 未选中.webp',   s:'浇头ui/肥肠 选中.webp',   x:312, y:258, bx:5,  by:40},
+  {name:'猪脚',   u:'浇头ui/猪脚 未选中.webp',   s:'浇头ui/猪脚 选中.webp',   x:9,   y:267, bx:5,  by:60},
+  {name:'鸡杂',   u:'浇头ui/鸡杂 未选中.webp',   s:'浇头ui/鸡杂 选中.webp',   x:311, y:352, bx:10, by:10},
+  {name:'酸辣粉', u:'浇头ui/酸辣粉 未选中.webp', s:'浇头ui/酸辣粉选中.webp',  x:64,  y:169, w:94, h:85},
+  {name:'杂酱',   u:'浇头ui/杂酱 未选中.webp',   s:'浇头ui/杂酱 选中.webp',   x:6,   y:351, bx:65, by:35, w:100, h:89},
+  {name:'香菇鸡', u:'浇头ui/香菇鸡 未选中.webp', s:'浇头ui/香菇鸡 选中.webp', x:159, y:466, bx:60, by:10},
+];
+
+const condDefs = [
+  {name:'葱',  u:'小料 ui/Property 1=葱 未选中.webp', s:'小料 ui/Property 1=葱 选中.webp',  h:145, bx:60, by:10},
+  {name:'香菜',u:'小料 ui/Property 1=香菜未选中.webp', s:'小料 ui/Property 1=香菜 选中.webp', h:132, bx:10, by:50},
+  {name:'煎蛋',u:'小料 ui/Property 1=煎蛋 未选中.webp', s:'小料 ui/Property 1=煎蛋 选中.webp', h:130, bx:46, by:46},
+  {name:'花生',u:'小料 ui/Property 1=花生 未选中.webp', s:'小料 ui/Property 1=花生 选中.webp', h:126, bx:70, by:70},
+  {name:'芝麻',u:'小料 ui/Property 1=芝麻 未选中.webp', s:'小料 ui/Property 1=芝麻 选中.webp', h:130, bx:15, by:20},
+  {name:'豌豆',u:'小料 ui/Property 1=豌豆 未选中.webp', s:'小料 ui/Property 1=豌豆 选中.webp', h:116, bx:50, by:80},
+];
+
+
+// ===== Menu Page Data =====
+const menuData = [
+  {cat:'超值套餐', items:[
+    {id:'combo1', name:'普通单人套餐', price:15.9, img:'菜单栏/普通单人套餐 未选中.webp', imgSel:'菜单栏/普通单人套餐 选中.webp', tags:['超值']},
+    {id:'combo2', name:'豪华单人套餐', price:25.9, img:'菜单栏/豪华单人套餐 未选中.webp', imgSel:'菜单栏/豪华单人套餐 选中.webp', tags:['超值']},
+    {id:'combo3', name:'多人乐享套餐', price:58.9, img:'菜单栏/多人乐享套餐 未选中.webp', imgSel:'菜单栏/多人乐享套餐 选中.webp', tags:['超值']},
+  ]},
+  {cat:'畅销榜单', items:[
+    {id:'b01', name:'猪脚面', price:18, img:'菜单栏/猪脚面 未选中.webp', imgSel:'菜单栏/猪脚面 选中.webp', tags:['人气']},
+    {id:'b02', name:'牛肉面', price:14, img:'菜单栏/牛肉面 未选中.webp', imgSel:'菜单栏/牛肉面 选中.webp', tags:['人气']},
+    {id:'b03', name:'杂酱面', price:11, img:'菜单栏/杂酱面 未选中.webp', imgSel:'菜单栏/杂酱面 选中.webp', tags:[]},
+    {id:'b04', name:'豌杂面', price:13, img:'菜单栏/豌杂面 未选中.webp', imgSel:'菜单栏/豌杂面 选中.webp', tags:['人气']},
+    {id:'b05', name:'鸡杂面', price:13, img:'菜单栏/鸡杂面 未选中.webp', imgSel:'菜单栏/鸡杂面 选中.webp', tags:[]},
+    {id:'b06', name:'香菇鸡面', price:13, img:'菜单栏/香菇鸡面 未选中.webp', imgSel:'菜单栏/香菇鸡面 选中.webp', tags:[]},
+    {id:'b07', name:'牛杂面', price:14, img:'菜单栏/牛杂面 未选中.webp', imgSel:'菜单栏/牛杂面 选中.webp', tags:[]},
+    {id:'b08', name:'肥肠面', price:14, img:'菜单栏/肥肠面 未选中.webp', imgSel:'菜单栏/肥肠面 选中.webp', tags:['人气']},
+    {id:'b09', name:'红烧肉面', price:13, img:'菜单栏/红烧肉面 未选中.webp', imgSel:'菜单栏/红烧肉面 选中.webp', tags:[]},
+    {id:'b10', name:'宜宾燃面', price:12, img:'菜单栏/宜宾燃面 未选中.webp', imgSel:'菜单栏/宜宾燃面 选中.webp', tags:[]},
+    {id:'b11', name:'酸辣粉', price:10, img:'菜单栏/酸辣粉 未选中.webp', imgSel:'菜单栏/酸辣粉 选中.webp', tags:['人气']},
+    {id:'b12', name:'素面', price:8, img:'菜单栏/素面 未选中.webp', imgSel:'菜单栏/素面 选中.webp', tags:[]},
+    {id:'b13', name:'辣椒炒肉面', price:14, img:'菜单栏/辣椒炒肉面 未选中.webp', imgSel:'菜单栏/辣椒炒肉面 选中.webp', tags:[]},
+    {id:'b14', name:'排骨面', price:14, img:'菜单栏/排骨面 未选中.webp', imgSel:'菜单栏/排骨面 选中.webp', tags:['人气']},
+  ]},
+  {cat:'特色小面', items:[
+    {id:'s01', name:'猪脚面', price:18, img:'菜单栏/猪脚面 未选中.webp', imgSel:'菜单栏/猪脚面 选中.webp', tags:['人气']},
+    {id:'s02', name:'牛肉面', price:14, img:'菜单栏/牛肉面 未选中.webp', imgSel:'菜单栏/牛肉面 选中.webp', tags:['人气']},
+    {id:'s03', name:'杂酱面', price:11, img:'菜单栏/杂酱面 未选中.webp', imgSel:'菜单栏/杂酱面 选中.webp', tags:[]},
+    {id:'s04', name:'豌杂面', price:13, img:'菜单栏/豌杂面 未选中.webp', imgSel:'菜单栏/豌杂面 选中.webp', tags:['人气']},
+    {id:'s05', name:'鸡杂面', price:13, img:'菜单栏/鸡杂面 未选中.webp', imgSel:'菜单栏/鸡杂面 选中.webp', tags:[]},
+    {id:'s06', name:'牛杂面', price:14, img:'菜单栏/牛杂面 未选中.webp', imgSel:'菜单栏/牛杂面 选中.webp', tags:[]},
+    {id:'s07', name:'肥肠面', price:14, img:'菜单栏/肥肠面 未选中.webp', imgSel:'菜单栏/肥肠面 选中.webp', tags:['人气']},
+    {id:'s08', name:'红烧肉面', price:13, img:'菜单栏/红烧肉面 未选中.webp', imgSel:'菜单栏/红烧肉面 选中.webp', tags:[]},
+    {id:'s09', name:'酸辣粉', price:10, img:'菜单栏/酸辣粉 未选中.webp', imgSel:'菜单栏/酸辣粉 选中.webp', tags:['人气']},
+    {id:'s10', name:'素面', price:8, img:'菜单栏/素面 未选中.webp', imgSel:'菜单栏/素面 选中.webp', tags:[]},
+  ]},
+  {cat:'水饺抄手', items:[
+    {id:'d01', name:'水饺', price:12, img:'菜单栏/水饺 未选中.webp', imgSel:'菜单栏/水饺 选中.webp', tags:['人气']},
+    {id:'d02', name:'抄手', price:10, img:'菜单栏/抄手 未选中.webp', imgSel:'菜单栏/抄手 选中.webp', tags:['人气']},
+    {id:'d03', name:'抄手面', price:12, img:'菜单栏/抄手面 未选中.webp', imgSel:'菜单栏/抄手面 选中.webp', tags:[]},
+    {id:'d04', name:'牛肉抄手', price:20, img:'菜单栏/牛肉抄手 未选中.webp', imgSel:'菜单栏/牛肉抄手 选中.webp', tags:['人气']},
+    {id:'d05', name:'肥肠抄手', price:20, img:'菜单栏/肥肠抄手 未选中.webp', imgSel:'菜单栏/肥肠抄手 选中.webp', tags:['人气']},
+  ]},
+  {cat:'凉面凉皮', items:[
+    {id:'c01', name:'凉面', price:9, img:'菜单栏/凉面 未选中.webp', imgSel:'菜单栏/凉面 选中.webp', tags:[]},
+    {id:'c02', name:'凉皮', price:9, img:'菜单栏/凉皮 未选中.webp', imgSel:'菜单栏/凉皮 选中.webp', tags:[]},
+  ]},
+  {cat:'饮品小料', items:[
+    {id:'t01', name:'牛肉', price:10, img:'菜单栏/牛肉 未选中.webp', imgSel:'菜单栏/牛肉 选中.webp', tags:['人气']},
+    {id:'t02', name:'红烧肉', price:8, img:'菜单栏/红烧肉 未选中.webp', imgSel:'菜单栏/红烧肉 选中.webp', tags:['人气']},
+    {id:'t03', name:'肥肠', price:10, img:'菜单栏/肥肠 未选中.webp', imgSel:'菜单栏/肥肠 选中.webp', tags:['人气']},
+    {id:'t04', name:'排骨', price:10, img:'菜单栏/排骨 未选中.webp', imgSel:'菜单栏/排骨 选中.webp', tags:['人气']},
+    {id:'t05', name:'牛杂', price:10, img:'菜单栏/牛杂 未选中.webp', imgSel:'菜单栏/牛杂 选中.webp', tags:['人气']},
+    {id:'t06', name:'香菇鸡', price:7, img:'菜单栏/香菇鸡 未选中.webp', imgSel:'菜单栏/香菇鸡 选中.webp', tags:[]},
+    {id:'t07', name:'鸡杂', price:7, img:'菜单栏/鸡杂 未选中.webp', imgSel:'菜单栏/鸡杂 选中.webp', tags:[]},
+    {id:'t08', name:'杂酱', price:7, img:'菜单栏/杂酱 未选中.webp', imgSel:'菜单栏/杂酱 选中.webp', tags:[]},
+    {id:'t09', name:'猪蹄', price:12, img:'菜单栏/猪蹄 未选中.webp', imgSel:'菜单栏/猪蹄 选中.webp', tags:['人气']},
+    {id:'t10', name:'煎蛋', price:2, img:'菜单栏/煎蛋 未选中.webp', imgSel:'菜单栏/煎蛋 选中.webp', tags:[]},
+    {id:'t11', name:'可乐', price:2, img:'菜单栏/可乐 未选中.webp', imgSel:'菜单栏/可乐 选中.webp', tags:[]},
+    {id:'t12', name:'雪碧', price:2, img:'菜单栏/雪碧 未选中.webp', imgSel:'菜单栏/雪碧 选中.webp', tags:[]},
+    {id:'t13', name:'豆奶', price:3, img:'菜单栏/豆奶 未选中.webp', imgSel:'菜单栏/豆奶 选中.webp', tags:[]},
+    {id:'t14', name:'怡宝', price:2, img:'菜单栏/怡宝 未选中.webp', imgSel:'菜单栏/怡宝 选中.webp', tags:[]},
+  ]},
+];
+const catKeys = ['超值套餐','畅销榜单','特色小面','水饺抄手','凉面凉皮','饮品小料'];
+
+function renderMenuCards() {
+  let html = '';
+  menuData.forEach(cat => {
+    html += '<div class="menu-category" data-category="'+cat.cat+'">';
+    html += '<div class="menu-cat-header">'+cat.cat+'</div>';
+    cat.items.forEach(item => {
+      if (cat.cat === '饮品小料') {
+        html += '<div class="menu-card" data-id="'+item.id+'" data-name="'+item.name+'" data-price="'+item.price+'">'+
+          '<img src="'+item.img+'" alt="'+item.name+'" loading="lazy">'+
+          '<div class="menu-qty-ctrl">'+
+            '<svg class="mqty-btn mqty-minus" onclick="event.stopPropagation();menuCardDec(\''+item.id+'\')" viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#CA2626" stroke-width="1.33"/><line x1="4" y1="8" x2="12" y2="8" stroke="#CA2626" stroke-width="2" stroke-linecap="round"/></svg>'+
+            '<span class="mqty-num" id="mqty_'+item.id+'">0</span>'+
+            '<svg class="mqty-btn mqty-plus" onclick="event.stopPropagation();menuCardInc(\''+item.id+'\')" viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="#CA2626" stroke="#CA2626" stroke-width="1.33"/><line x1="8" y1="4" x2="8" y2="12" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="8" x2="12" y2="8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>'+
+          '</div>'+
+          '</div>';
+      } else {
+        html += '<div class="menu-card" data-id="'+item.id+'" data-name="'+item.name+'" data-price="'+item.price+'" onclick="showDetailPage(\''+item.id+'\')">'+
+          '<img src="'+item.img+'" alt="'+item.name+'" loading="lazy">'+
+          '<div class="card-spec-hitarea" onclick="event.stopPropagation();showDetailPage(\''+item.id+'\')"></div>'+
+          '</div>';
+      }
+    });
+    html += '</div>';
+  });
+  html += '<img class="menu-pig-stamp" src="小猪印章.webp" alt="">';
+  document.getElementById('menuScroll').innerHTML = html;
+}
+
+function selectMenuItem(id) {
+  const idx = state.menuCart.findIndex(i => i.id === id);
+  if (idx >= 0) {
+    state.menuCart[idx].qty = (state.menuCart[idx].qty || 1) + 1;
+  } else {
+    const card = document.querySelector('.menu-card[data-id="'+id+'"]');
+    if (card) {
+      state.menuCart.push({
+        id: id,
+        name: card.dataset.name,
+        price: parseFloat(card.dataset.price),
+        qty: 1
+      });
+    }
+  }
+  const card = document.querySelector('.menu-card[data-id="'+id+'"]');
+  if (card) {
+    var isNowSelected = idx < 0;
+    card.classList.toggle('selected', isNowSelected);
+    // Swap image to selected/unselected state
+    var img = card.querySelector('img');
+    menuData.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        if (item.id === id) {
+          if (isNowSelected && item.imgSel) {
+            img.src = item.imgSel;
+          } else if (!isNowSelected && item.img) {
+            img.src = item.img;
+          }
+        }
+      });
+    });
+  }
+  updateMenuCart();
+}
+
+function menuCardInc(id) {
+  const card = document.querySelector('.menu-card[data-id="'+id+'"]');
+  if (!card) return;
+  const idx = state.menuCart.findIndex(i => i.id === id);
+  if (idx >= 0) {
+    state.menuCart[idx].qty = (state.menuCart[idx].qty || 1) + 1;
+  } else {
+    state.menuCart.push({
+      id: id,
+      name: card.dataset.name,
+      price: parseFloat(card.dataset.price),
+      qty: 1
+    });
+  }
+  refreshDrinkQtys();
+  updateMenuCart();
+}
+
+function menuCardDec(id) {
+  const idx = state.menuCart.findIndex(i => i.id === id);
+  if (idx < 0) return;
+  if (state.menuCart[idx].qty > 1) {
+    state.menuCart[idx].qty--;
+  } else {
+    state.menuCart.splice(idx, 1);
+  }
+  refreshDrinkQtys();
+  updateMenuCart();
+}
+
+function refreshDrinkQtys() {
+  document.querySelectorAll('.menu-qty-ctrl .mqty-num').forEach(function(el) {
+    var id = el.id.replace('mqty_', '');
+    var item = state.menuCart.find(function(i) { return i.id === id; });
+    el.textContent = item ? (item.qty || 1) : '0';
+  });
+}
+
+function updateMenuCart() {
+  refreshDrinkQtys();
+  var total = state.menuCart.reduce((s,i) => s + i.price * (i.qty||1), 0);
+  if (state.dineType === '外带') total += 1;
+  const count = state.menuCart.reduce((s,i) => s + (i.qty||1), 0);
+
+  // Bottom bar
+  var bbIcon = document.getElementById('bbIcon');
+  var bbBadge = document.getElementById('bbBadge');
+  var bbPrice = document.getElementById('bbPrice');
+  var bbBtn = document.getElementById('bbBtn');
+
+  if (count > 0) {
+    // Figma "选中后": icon + badge + price + enabled button
+    if (bbIcon) { bbIcon.src = '价格浮窗/碗（选中后）.webp'; bbIcon.parentElement.classList.add('small'); }
+    if (bbBadge) { bbBadge.textContent = count; bbBadge.classList.add('show'); }
+    if (bbPrice) { bbPrice.innerHTML = '<span class="sym">¥</span><span class="num">'+Number(total).toFixed(1)+'</span>'; bbPrice.classList.add('has-items'); }
+    if (bbBtn) bbBtn.classList.add('on');
+  } else {
+    // Figma "选中前": icon + "未选购商品" + disabled button
+    if (bbIcon) { bbIcon.src = '价格浮窗/碗.webp'; bbIcon.parentElement.classList.remove('small'); }
+    if (bbBadge) bbBadge.classList.remove('show');
+    if (bbPrice) { bbPrice.textContent = '未选购商品'; bbPrice.classList.remove('has-items'); }
+    if (bbBtn) bbBtn.classList.remove('on');
+  }
+  renderCartPanel();
+}
+
+function getCartImg(name) {
+  var map = {
+    '普通单人套餐':'普通单人套餐（购物车）.webp','豪华单人套餐':'豪华单人套餐（购物车）@4x.webp','多人乐享套餐':'多人乐享套餐（购物车）.webp',
+    '猪脚面':'猪脚面（购物车）.webp','牛肉面':'牛肉面（购物车）.webp','杂酱面':'杂酱面（购物车）.webp',
+    '豌杂面':'豌豆杂酱面.webp','鸡杂面':'鸡杂面（购物车）.webp','香菇鸡面':'香菇鸡面（购物车）.webp',
+    '牛杂面':'牛杂面（购物车）.webp','肥肠面':'肥肠面（购物车）.webp','红烧肉面':'红烧肉面（购物车）.webp',
+    '宜宾燃面':'宜宾燃面（购物车）.webp','酸辣粉':'酸辣粉（购物车）.webp','素面':'素面（购物车）.webp',
+    '辣椒炒肉面':'辣椒炒肉面（购物车）.webp','排骨面':'排骨面（购物车）.webp',
+    '水饺':'水饺（购物车）.webp','抄手':'抄手（购物车）.webp','抄手面':'抄手面（购物车）.webp',
+    '牛肉抄手':'牛肉抄手（购物车）.webp','肥肠抄手':'肥肠抄手（购物车）.webp',
+    '凉面':'凉面（购物车）.webp','凉皮':'凉皮（购物车）.webp',
+    '牛肉':'牛肉（购物车）.webp','牛杂':'牛杂（购物车）.webp','肥肠':'肥肠（购物车）.webp',
+    '排骨':'排骨（购物车）.webp','红烧肉':'红烧肉（购物车）.webp','鸡杂':'鸡杂（购物车）.webp',
+    '香菇鸡':'香菇鸡（购物车）.webp','杂酱':'杂酱（购物车）.webp','猪蹄':'猪蹄（购物车）.webp',
+    '煎蛋':'煎蛋（购物车）.webp','可乐':'可乐（购物车）.webp','雪碧':'雪碧（购物车）.webp',
+    '豆奶':'豆奶（购物车）.webp','怡宝':'怡宝（购物车）.webp',
+    // confirm addon names → same images
+    '现做煎蛋':'煎蛋（购物车）.webp','美味猪蹄':'猪蹄（购物车）.webp','大块牛肉':'牛肉（购物车）.webp',
+    '冰镇可乐':'可乐（购物车）.webp','酱香肥肠':'肥肠（购物车）.webp',
+  };
+  if (map[name]) return '购物车菜品/'+map[name];
+  return '购物车菜品/'+name+'（购物车）.webp';
+}
+
+function openCartPanel() {
+  if (state.menuCart.length === 0) return;
+  var overlay = document.getElementById('cartOverlay');
+  var sheet = document.getElementById('cartSheet');
+  if (overlay) overlay.classList.add('open');
+  if (sheet) sheet.classList.add('open');
+  var bottomBar = document.querySelector('.bottom-bar');
+  if (bottomBar) bottomBar.classList.add('raised');
+  renderCartPanel();
+}
+
+function toggleCartPanel() {
+  var overlay = document.getElementById('cartOverlay');
+  if (!overlay) return;
+  if (overlay.classList.contains('open')) {
+    closeCartPanel();
+  } else {
+    openCartPanel();
+  }
+}
+
+function closeCartPanel() {
+  var overlay = document.getElementById('cartOverlay');
+  var sheet = document.getElementById('cartSheet');
+  if (overlay) overlay.classList.remove('open');
+  if (sheet) sheet.classList.remove('open');
+  var bottomBar = document.querySelector('.bottom-bar');
+  if (bottomBar) bottomBar.classList.remove('raised');
+}
+
+function clearCart() {
+  state.menuCart = [];
+  refreshDrinkQtys();
+  updateMenuCart();
+  document.querySelectorAll('.menu-card.selected').forEach(function(c) {
+    c.classList.remove('selected');
+    var id = c.dataset.id;
+    var img = c.querySelector('img');
+    menuData.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        if (item.id === id && item.img) img.src = item.img;
+      });
+    });
+  });
+  closeCartPanel();
+}
+
+function cartChangeQty(idx, delta) {
+  var removedId = null;
+  if (delta < 0 && state.menuCart[idx].qty <= 1) {
+    removedId = state.menuCart[idx].id;
+    state.menuCart.splice(idx, 1);
+  } else if (delta < 0) {
+    state.menuCart[idx].qty--;
+  } else {
+    state.menuCart[idx].qty = (state.menuCart[idx].qty || 1) + 1;
+  }
+  if (removedId) {
+    var card = document.querySelector('.menu-card[data-id="'+removedId+'"]');
+    if (card) {
+      card.classList.remove('selected');
+      var img = card.querySelector('img');
+      menuData.forEach(function(cat) {
+        cat.items.forEach(function(item) {
+          if (item.id === removedId && item.img) img.src = item.img;
+        });
+      });
+    }
+  }
+  updateMenuCart();
+}
+
+function renderCartPanel() {
+  var list = document.getElementById('cartSheetList');
+  var title = document.getElementById('cartSheetTitle');
+  if (!list || !title) return;
+  var totalItems = state.menuCart.reduce(function(s,i){ return s + (i.qty||1); }, 0);
+  var totalPrice = state.menuCart.reduce(function(s,i){ return s + i.price * (i.qty||1); }, 0);
+  if (state.dineType === '外带') totalPrice += 1;
+  title.textContent = '已选'+totalItems+'件商品';
+
+  // Update bottom elements inside cart sheet
+  var icon = document.getElementById('csIcon');
+  var badge = document.getElementById('csBadge');
+  var price = document.getElementById('csPrice');
+  var btn = document.getElementById('csBtn');
+  if (state.menuCart.length > 0) {
+    if (icon) icon.src = '价格浮窗/碗（选中后）.webp';
+    if (badge) { badge.textContent = totalItems; badge.classList.add('show'); }
+    if (price) price.innerHTML = '<span class="sym">¥</span><span class="num">'+Number(totalPrice).toFixed(1)+'</span>';
+    if (btn) btn.classList.add('on');
+  } else {
+    if (icon) icon.src = '价格浮窗/碗.webp';
+    if (badge) badge.classList.remove('show');
+    if (price) price.textContent = '未选购商品';
+    if (btn) btn.classList.remove('on');
+  }
+
+  if (state.menuCart.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px 0;color:#808080;font-size:14px;">购物车是空的</div>';
+    return;
+  }
+  var html = '';
+  state.menuCart.forEach(function(item, idx) {
+    var qty = item.qty || 1;
+    var specHTML = item.spec ? '<div class="cart-item-spec">'+item.spec+'</div>' : '';
+    html += '<div class="cart-item">'+
+      '<div class="cart-item-img"><img src="'+getCartImg(item.name)+'" alt="" onerror="this.src=\'购物车菜品/清空.webp\'"></div>'+
+      '<div class="cart-item-info">'+
+        '<div class="cart-item-name">'+item.name+'</div>'+
+        specHTML+
+        '<div class="cart-item-price">¥'+Number(item.price).toFixed(1)+'</div>'+
+      '</div>'+
+      '<div class="cart-item-qty">'+
+        '<img src="详情页/底部按钮/减少.webp" alt="-" onclick="event.stopPropagation();cartChangeQty('+idx+',-1)">'+
+        '<span>'+qty+'</span>'+
+        '<img src="详情页/底部按钮/添加.webp" alt="+" onclick="event.stopPropagation();cartChangeQty('+idx+',1)">'+
+      '</div>'+
+    '</div>';
+  });
+  list.innerHTML = html;
+}
+
+const catImgs = {
+  '超值套餐':['种类/超值套餐（选择后）.webp','种类/超值套餐（选择前）.webp'],
+  '畅销榜单':['种类/招牌推荐（选择后）.webp','种类/招牌推荐（选择前）.webp'],
+  '特色小面':['种类/特色小面（选择后）.webp','种类/特色小面（选择前）.webp'],
+  '水饺抄手':['种类/水饺抄手（选择后）.webp','种类/水饺抄手（选择前）.webp'],
+  '凉面凉皮':['种类/凉面凉皮（选择后）.webp','种类/凉面凉皮（选择前）.webp'],
+  '饮品小料':['种类/饮品小料（选择后）.webp','种类/饮品小料（选择前）.webp'],
+};
+
+function setActiveCategory(catKey) {
+  for (const [k, [sel, unsel]] of Object.entries(catImgs)) {
+    document.getElementById('catImg_'+k).src = unsel;
+  }
+  if (catImgs[catKey]) {
+    document.getElementById('catImg_'+catKey).src = catImgs[catKey][0];
+  }
+}
+
+function selectCategory(catKey) {
+  setActiveCategory(catKey);
+  state._manualCatSelect = true;
+  const section = document.querySelector('.menu-category[data-category="'+catKey+'"]');
+  if (section) section.scrollIntoView({behavior:'smooth', block:'start'});
+  setTimeout(() => { state._manualCatSelect = false; }, 600);
+}
+
+function toggleDineType() {
+  state.dineType = state.dineType==='堂食'?'外带':'堂食';
+  const pill = document.getElementById('dinePill');
+  const t1 = document.getElementById('dineText1');
+  const t2 = document.getElementById('dineText2');
+  if (state.dineType === '堂食') {
+    pill.classList.remove('right');
+    t1.className = 'dine-text on';
+    t2.className = 'dine-text off';
+  } else {
+    pill.classList.add('right');
+    t1.className = 'dine-text off';
+    t2.className = 'dine-text on';
+  }
+}
+
+function goCheckout() {
+  if (state.menuCart.length === 0) {
+    showToast('请先选购商品');
+    return;
+  }
+  closeCartPanel();
+  // Show loading animation
+  var overlay = document.getElementById('loadingOverlay');
+  var gif = overlay ? overlay.querySelector('.loading-gif') : null;
+  var text = overlay ? overlay.querySelector('.loading-text') : null;
+  if (gif) gif.src = '小猪入锅.gif';
+  if (text) text.textContent = '正在烹饪美味...';
+  if (overlay) overlay.classList.add('show');
+  // Render confirm page underneath the loading overlay
+  showConfirmPage();
+  setTimeout(function() {
+    if (overlay) overlay.classList.remove('show');
+  }, 2000);
+}
+
+// ===== Detail Page =====
+let _detailId = null;
+let _detailQty = 1;
+
+// Combo data: what's included in each combo meal
+const comboData = {
+  combo1: {
+    name:'普通单人套餐', desc:'轻松省心搭配，超多福利',
+    hero:'详情页2/套餐详情页/套餐页/详情大图/普通单人套餐（详情页大图）.webp',
+    price:15.9,
+    sections:[
+      {heading:'主食', beigeBg:true, items:[
+        {name:'牛肉面', img:'详情页2/套餐详情页/套餐页/主食/牛肉面 未选中.webp', imgSel:'详情页2/套餐详情页/套餐页/主食/牛肉面 选中.webp', qty:'1份', spice:'微辣', modifiable:true},
+      ]},
+      {heading:'小料', beigeBg:false, items:[
+        {name:'现做煎蛋', img:'详情页2/套餐详情页/套餐页/小料小炒/现做煎蛋 未选中（详情页卡片）.webp', imgSel:'详情页2/套餐详情页/套餐页/小料小炒/现做煎蛋 选中（详情页卡片）.webp', qty:'1份', spice:'', modifiable:false},
+      ]},
+      {heading:'饮料', beigeBg:false, items:[
+        {name:'豆奶（自取）', img:'详情页2/套餐详情页/套餐页/饮料/豆奶自取 未选中（详情页卡片）.webp', imgSel:'详情页2/套餐详情页/套餐页/饮料/豆奶自取 选中（详情页卡片）.webp', qty:'1份', spice:'', modifiable:false},
+      ]},
+    ],
+  },
+  combo2: {
+    name:'豪华单人套餐', desc:'丰盛搭配，超值享受',
+    hero:'详情页2/套餐详情页/套餐页/详情大图/豪华单人套餐（详情页大图）.webp',
+    price:25.9,
+    sections:[
+      {heading:'主食', beigeBg:true, items:[
+        {name:'猪脚面', img:'详情页2/套餐详情页/套餐页/主食/猪脚面 未选中.webp', imgSel:'详情页2/套餐详情页/套餐页/主食/猪脚面 选中.webp', qty:'1份', spice:'中辣', modifiable:true},
+      ]},
+      {heading:'小料', beigeBg:false, items:[
+        {name:'软糯肥肠', img:'详情页2/套餐详情页/套餐页/小料小炒/肥肠 未选中（详情页卡片）.webp', imgSel:'详情页2/套餐详情页/套餐页/小料小炒/肥肠 选中（详情页卡片）.webp', qty:'1份', spice:'', modifiable:false},
+      ]},
+      {heading:'饮料', beigeBg:false, items:[
+        {name:'豆奶（自取）', img:'详情页2/套餐详情页/套餐页/饮料/豆奶自取 未选中（详情页卡片）.webp', imgSel:'详情页2/套餐详情页/套餐页/饮料/豆奶自取 选中（详情页卡片）.webp', qty:'1份', spice:'', modifiable:false},
+      ]},
+    ],
+  },
+  combo3: {
+    name:'多人乐享套餐', desc:'好友共享，欢乐加倍',
+    hero:'详情页2/套餐详情页/套餐页/详情大图/多人乐享套餐（详情页大图）.webp',
+    price:58.9,
+    sections:[
+      {heading:'主食', beigeBg:true, items:[
+        {name:'牛肉面', img:'详情页2/套餐详情页/套餐页/主食/牛肉面 未选中.webp', imgSel:'详情页2/套餐详情页/套餐页/主食/牛肉面 选中.webp', qty:'1份', spice:'微辣', modifiable:true},
+        {name:'牛肉面', img:'详情页2/套餐详情页/套餐页/主食/牛肉面 未选中.webp', imgSel:'详情页2/套餐详情页/套餐页/主食/牛肉面 选中.webp', qty:'1份', spice:'微辣', modifiable:true},
+        {name:'牛肉面', img:'详情页2/套餐详情页/套餐页/主食/牛肉面 未选中.webp', imgSel:'详情页2/套餐详情页/套餐页/主食/牛肉面 选中.webp', qty:'1份', spice:'微辣', modifiable:true},
+      ]},
+      {heading:'小料', beigeBg:false, items:[
+        {name:'现做煎蛋', img:'详情页2/套餐详情页/套餐页/小料小炒/现做煎蛋 未选中（详情页卡片）.webp', imgSel:'详情页2/套餐详情页/套餐页/小料小炒/现做煎蛋 选中（详情页卡片）.webp', qty:'3份', spice:'', modifiable:false},
+      ]},
+      {heading:'饮料', beigeBg:false, items:[
+        {name:'豆奶（自取）', img:'详情页2/套餐详情页/套餐页/饮料/豆奶自取 未选中（详情页卡片）.webp', imgSel:'详情页2/套餐详情页/套餐页/饮料/豆奶自取 选中（详情页卡片）.webp', qty:'3份', spice:'', modifiable:false},
+      ]},
+    ],
+  },
+};
+
+const itemHeroMap = {
+  '猪脚面':'详情页2/小料详情页/猪蹄.webp',
+  '牛肉面':'详情页2/小料详情页/牛肉.webp',
+  '杂酱面':'详情页2/小料详情页/杂酱.webp',
+  '豌杂面':'详情页2/小料详情页/杂酱.webp',
+  '鸡杂面':'详情页2/小料详情页/鸡杂.webp',
+  '香菇鸡面':'详情页2/小料详情页/香菇鸡.webp',
+  '牛杂面':'详情页2/小料详情页/牛杂.webp',
+  '肥肠面':'详情页2/小料详情页/肥肠.webp',
+  '红烧肉面':'详情页2/小料详情页/红烧肉.webp',
+  '宜宾燃面':'详情页2/小料详情页/杂酱.webp',
+  '酸辣粉':'详情页2/小料详情页/杂酱.webp',
+  '素面':'详情页2/小料详情页/杂酱.webp',
+  '辣椒炒肉面':'详情页2/小料详情页/红烧肉.webp',
+  '排骨面':'详情页2/小料详情页/排骨.webp',
+  '水饺':'详情页2/小料详情页/杂酱.webp',
+  '抄手':'详情页2/小料详情页/杂酱.webp',
+  '抄手面':'详情页2/小料详情页/杂酱.webp',
+  '牛肉抄手':'详情页2/小料详情页/牛肉.webp',
+  '肥肠抄手':'详情页2/小料详情页/肥肠.webp',
+  '凉面':'详情页2/小料详情页/杂酱.webp',
+  '凉皮':'详情页2/小料详情页/杂酱.webp',
+  '牛肉':'详情页2/小料详情页/牛肉.webp',
+  '红烧肉':'详情页2/小料详情页/红烧肉.webp',
+  '肥肠':'详情页2/小料详情页/肥肠.webp',
+  '排骨':'详情页2/小料详情页/排骨.webp',
+  '牛杂':'详情页2/小料详情页/牛杂.webp',
+  '香菇鸡':'详情页2/小料详情页/香菇鸡.webp',
+  '鸡杂':'详情页2/小料详情页/鸡杂.webp',
+  '杂酱':'详情页2/小料详情页/杂酱.webp',
+  '猪蹄':'详情页2/小料详情页/猪蹄.webp',
+  '煎蛋':'详情页2/小料详情页/煎蛋.webp',
+  '可乐':'详情页2/小料详情页/可乐.webp',
+  '雪碧':'详情页2/小料详情页/雪碧.webp',
+  '豆奶':'详情页2/小料详情页/豆奶.webp',
+  '怡宝':'详情页2/小料详情页/怡宝.webp',
+};
+
+function showDetailPage(id) {
+  const card = document.querySelector('.menu-card[data-id="'+id+'"]');
+  if (!card) return;
+  const name = card.dataset.name;
+  const price = parseFloat(card.dataset.price) || 0;
+  _detailId = id;
+  _detailQty = 1;
+  document.getElementById('detailQty').textContent = '1';
+
+  if (id.startsWith('combo')) {
+    renderComboDetail(id);
+    updateDetailPrice();
+    document.getElementById('page-detail').classList.add('show');
+    document.getElementById('navBar').style.display = 'none';
+  } else {
+    // Non-combo items: show spec selector popup
+    showMethodPopupForItem(card, name, price);
+  }
+}
+
+function renderComboDetail(id) {
+  const c = comboData[id];
+  if (!c) return;
+  _comboExtras = 0;
+  _comboItemSpecs = {};
+  document.getElementById('detailImg').src = c.hero;
+  document.getElementById('detailName').textContent = c.name;
+  document.getElementById('detailDesc').textContent = c.desc;
+  document.getElementById('detailComboBody').style.display = 'block';
+
+  var sectionsEl = document.getElementById('detailComboSections');
+  // Fade-out → rebuild → fade-in to avoid innerHTML flash
+  sectionsEl.style.opacity = '0';
+  requestAnimationFrame(function() {
+    var html = '';
+    c.sections.forEach(function(sec, si) {
+      html += '<div class="detail-section-heading">'+sec.heading+'</div>';
+      var sizeClass = sec.heading==='主食' ? 'card-main' : 'card-side';
+      sec.items.forEach(function(item, ii) {
+        var cls = 'combo-card '+sizeClass;
+        var onclick = '';
+        if (item.modifiable) {
+          cls += ' modifiable';
+          onclick = ' onclick="event.stopPropagation();showMethodPopup(\x27'+id+'\x27,'+si+','+ii+')"';
+          html += '<div class="'+cls+'" data-si="'+si+'" data-ii="'+ii+'"'+onclick+'><img src="'+item.img+'" alt="'+item.name+'"></div>';
+          return;
+        } else if (sec.pickOne) {
+          var sel = ii===0;
+          cls += ' pick-one' + (sel ? ' selected' : '');
+          var src = (sel && item.imgSel) ? item.imgSel : item.img;
+          onclick = ' onclick="event.stopPropagation();pickOneToggle(this,\x27'+id+'\x27,'+si+')"';
+          html += '<div class="'+cls+'" data-si="'+si+'" data-ii="'+ii+'"'+onclick+'><img src="'+src+'" alt="'+item.name+'"></div>';
+          return;
+        }
+        cls += ' toggleable';
+        onclick = ' onclick="event.stopPropagation();toggleCardSelect(this,\x27'+id+'\x27,'+si+','+ii+')"';
+        html += '<div class="'+cls+'" data-si="'+si+'" data-ii="'+ii+'"'+onclick+'><img src="'+item.img+'" alt="'+item.name+'"></div>';
+      });
+    });
+    sectionsEl.innerHTML = html;
+    sectionsEl.style.opacity = '1';
+  });
+}
+
+function renderItemDetail(card, name, price) {
+  var heroSrc = itemHeroMap[name] || card.querySelector('img').src;
+  document.getElementById('detailImg').src = heroSrc;
+  document.getElementById('detailName').textContent = name;
+  document.getElementById('detailDesc').textContent = '';
+  document.getElementById('detailComboBody').style.display = 'block';
+  document.getElementById('detailComboSections').innerHTML = '';
+}
+
+function pickOneToggle(el, comboId, sectionIdx) {
+  var container = document.getElementById('detailComboSections');
+  var cards = container.querySelectorAll('.combo-card.pick-one[data-si="'+sectionIdx+'"]');
+  // Reset all cards in this pick-one group: switch back to unselected img
+  cards.forEach(function(c) {
+    c.classList.remove('selected');
+    var ii = parseInt(c.dataset.ii);
+    var item = comboData[comboId].sections[sectionIdx].items[ii];
+    if (item) { c.querySelector('img').src = item.img; }
+  });
+  // Set the clicked card as selected: switch to selected img
+  el.classList.add('selected');
+  var elIi = parseInt(el.dataset.ii);
+  var elItem = comboData[comboId].sections[sectionIdx].items[elIi];
+  if (elItem && elItem.imgSel) {
+    el.querySelector('img').src = elItem.imgSel;
+  }
+  // Bounce
+  el.classList.add('bounce');
+  setTimeout(function() { el.classList.remove('bounce'); }, 400);
+}
+
+function toggleCardSelect(el, comboId, si, ii) {
+  var item = comboData[comboId].sections[si].items[ii];
+  if (!item) return;
+  var isSel = el.classList.toggle('selected');
+  if (isSel && item.imgSel) {
+    el.querySelector('img').src = item.imgSel;
+  } else {
+    el.querySelector('img').src = item.img;
+  }
+  el.classList.add('bounce');
+  setTimeout(function() { el.classList.remove('bounce'); }, 400);
+}
+
+// Spec selector data — matches Figma "选规格" popup
+var specData = {
+  做法: { type:'single', options:['汤面','干拌'] },
+  面条: { type:'single', options:['细面','刀削面','细粉','桂林粉','红薯粉'] },
+  分量: { type:'single', options:[
+    {name:'中份', price:0}, {name:'大份', price:3}, {name:'巨大', price:6}
+  ]},
+  加料: { type:'multi', options:[
+    {name:'猪脚', price:12}, {name:'牛肉', price:10}, {name:'肥肠', price:10},
+    {name:'香菇鸡', price:8}, {name:'鸡杂', price:7}, {name:'杂酱', price:7},
+    {name:'煎蛋', price:2}
+  ]},
+  辣度: { type:'single', options:['不加辣','微辣','中辣','重辣'] },
+  忌口: { type:'single', options:['葱和香菜都加','不加葱','不加香菜','都不加'] },
+};
+var _specSelections = {};
+
+function showMethodPopup(comboId, si, ii) {
+  var titleText = '选择规格', descText = '';
+  var item = null;
+  if (comboId && comboData[comboId]) {
+    var c = comboData[comboId];
+    var sec = c.sections[si];
+    if (sec && sec.items[ii]) {
+      item = sec.items[ii];
+      titleText = item.name;
+    }
+    descText = c.desc || '';
+  }
+  // Store which card is being modified for the confirm callback
+  _specComboId = comboId;
+  _specSi = si;
+  _specIi = ii;
+  showSpecPopup(titleText, descText, function() {
+    if (!_specComboId || _specSi === undefined) return;
+    // Save spec selections for this combo item
+    if (!_comboItemSpecs[_specComboId]) _comboItemSpecs[_specComboId] = {};
+    var key = _specSi + '_' + _specIi;
+    _comboItemSpecs[_specComboId][key] = JSON.parse(JSON.stringify(_specSelections));
+    recalcComboExtras();
+    updateDetailPrice();
+    // Find the card element and update it
+    var sections = document.getElementById('detailComboSections');
+    var cards = sections.querySelectorAll('.combo-card.modifiable');
+    cards.forEach(function(card) {
+      if (card.dataset.si == _specSi && card.dataset.ii == _specIi) {
+        var c = comboData[_specComboId];
+        var it = c.sections[_specSi].items[_specIi];
+        if (it.imgSel) {
+          card.querySelector('img').src = it.imgSel;
+        }
+        card.classList.add('bounce');
+        setTimeout(function() { card.classList.remove('bounce'); }, 400);
+      }
+    });
+  });
+}
+
+var _specBounceCard = null;
+
+function showMethodPopupForItem(card, name, price) {
+  var exclude = ['水饺','抄手','牛肉抄手','肥肠抄手','凉面','凉皮'].indexOf(name) >= 0 ? ['面条'] : [];
+  _specBounceCard = card;
+  _specBasePrice = price;
+  showSpecPopup(name, '', function() {
+    var total = calcSpecTotal(_specBasePrice);
+    state.menuCart.push({ id: card.dataset.id, name: name, price: total, qty: 1, spec: buildSpecLine() });
+    updateMenuCart();
+    showToast('已加入购物车!');
+  }, exclude);
+}
+
+function showSpecPopup(titleText, descText, onConfirm, excludeCats) {
+  var existing = document.getElementById('methodPopupOverlay');
+  if (existing) existing.remove();
+  _specSelections = {};
+  _specConfirmCb = onConfirm || null;
+  excludeCats = excludeCats || [];
+
+  // Build scroll content HTML first
+  var scrollHTML = '<div class="spec-title">'+titleText+'</div>';
+  if (descText) scrollHTML += '<div class="spec-desc">'+descText+'</div>';
+
+  Object.keys(specData).forEach(function(cat) {
+    if (excludeCats.indexOf(cat) >= 0) return;
+    var sd = specData[cat];
+    scrollHTML += '<div class="spec-heading">'+cat+(sd.type==='multi'?'(可选多种)':'(任选一种)')+'</div>';
+    scrollHTML += '<div class="spec-pills" data-cat="'+cat+'">';
+    sd.options.forEach(function(opt, oi) {
+      var n = typeof opt === 'string' ? opt : opt.name;
+      var pr = (typeof opt === 'object' && opt.price) ? opt.price : 0;
+      var onClass = oi===0 && sd.type==='single' ? ' on' : '';
+      var priceHTML = pr ? '<span class="spec-price">¥'+pr+'</span>' : '';
+      var pillCls = pr ? 'spec-pill has-price'+onClass : 'spec-pill'+onClass;
+      scrollHTML += '<span class="'+pillCls+'" data-cat="'+cat+'" data-idx="'+oi+'" data-name="'+n+'" data-price="'+pr+'" onclick="event.stopPropagation();specTogglePill(this)">'+n+priceHTML+'</span>';
+    });
+    scrollHTML += '</div>';
+
+    if (sd.type === 'single') {
+      _specSelections[cat] = 0;
+    } else {
+      _specSelections[cat] = [];
+    }
+  });
+
+  var overlay = document.createElement('div');
+  overlay.id = 'methodPopupOverlay';
+  overlay.className = 'spec-overlay';
+  overlay.onclick = function(e) { if (e.target === overlay) closeMethodPopup(); };
+
+  var modal = document.createElement('div');
+  modal.className = 'spec-modal';
+
+  var closeBar = document.createElement('div');
+  closeBar.className = 'spec-close-bar';
+  closeBar.innerHTML = '<span></span>';
+  modal.appendChild(closeBar);
+
+  var scroll = document.createElement('div');
+  scroll.className = 'spec-scroll';
+  scroll.innerHTML = scrollHTML;
+  modal.appendChild(scroll);
+
+  var wrap = document.createElement('div');
+  wrap.className = 'spec-confirm-wrap';
+  wrap.innerHTML = '<div class="spec-total-price"><span class="sym">¥</span><span id="specTotalPrice">'+_specBasePrice+'</span></div>'+
+    '<button class="spec-confirm-btn" onclick="confirmSpecPopup()">我选好了</button>';
+  modal.appendChild(wrap);
+
+  overlay.appendChild(modal);
+  document.querySelector('.app').appendChild(overlay);
+  document.getElementById('navBar').style.display = 'none';
+}
+
+function confirmSpecPopup() {
+  if (_specConfirmCb) _specConfirmCb();
+  var card = _specBounceCard;
+  _specBounceCard = null;
+  closeMethodPopup();
+  if (card) {
+    // Swap to selected image
+    var id = card.dataset.id;
+    menuData.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        if (item.id === id && item.imgSel) {
+          card.querySelector('img').src = item.imgSel;
+        }
+      });
+    });
+    card.classList.add('bounce');
+    setTimeout(function() { card.classList.remove('bounce'); }, 400);
+  }
+}
+
+var _specConfirmCb = null;
+var _specComboId = null;
+var _specSi = -1;
+var _specIi = -1;
+var _specBasePrice = 0;
+var _comboExtras = 0;
+var _comboItemSpecs = {};
+
+function recalcComboExtras() {
+  var extras = 0;
+  var specs = _comboItemSpecs[_detailId] || {};
+  Object.keys(specs).forEach(function(key) {
+    var sel = specs[key];
+    // 分量 extra
+    var portionSel = sel['分量'];
+    if (portionSel !== undefined && portionSel > 0) {
+      var portionOpt = specData['分量'].options[portionSel];
+      if (typeof portionOpt === 'object' && portionOpt.price) extras += portionOpt.price;
+    }
+    // 加料 extras
+    var addonSel = sel['加料'] || [];
+    addonSel.forEach(function(idx) {
+      var opt = specData['加料'].options[idx];
+      if (opt && opt.price) extras += opt.price;
+    });
+  });
+  _comboExtras = extras;
+}
+
+function calcSpecTotal(basePrice) {
+  var total = basePrice;
+  // 分量 extra
+  var portionSel = _specSelections['分量'];
+  if (portionSel !== undefined) {
+    var portionOpt = specData['分量'].options[portionSel];
+    if (typeof portionOpt === 'object' && portionOpt.price) total += portionOpt.price;
+  }
+  // 加料 extras
+  var addonSel = _specSelections['加料'] || [];
+  addonSel.forEach(function(idx) {
+    var opt = specData['加料'].options[idx];
+    if (opt && opt.price) total += opt.price;
+  });
+  return total;
+}
+
+function buildSpecLine() {
+  var parts = [];
+  var methodSel = _specSelections['做法'];
+  if (methodSel !== undefined) parts.push(specData['做法'].options[methodSel]);
+  var noodleSel = _specSelections['面条'];
+  if (noodleSel !== undefined) parts.push(specData['面条'].options[noodleSel]);
+  var portionSel = _specSelections['分量'];
+  if (portionSel !== undefined) {
+    var po = specData['分量'].options[portionSel];
+    parts.push(typeof po === 'object' ? po.name : po);
+  }
+  var spiceSel = _specSelections['辣度'];
+  if (spiceSel !== undefined) parts.push(specData['辣度'].options[spiceSel]);
+  var tabooSel = _specSelections['忌口'];
+  if (tabooSel !== undefined && tabooSel > 0) parts.push(specData['忌口'].options[tabooSel]);
+  return parts.join(' · ');
+}
+
+function updateSpecPrice() {
+  var el = document.getElementById('specTotalPrice');
+  if (el) el.textContent = calcSpecTotal(_specBasePrice);
+}
+
+function specTogglePill(el) {
+  var cat = el.dataset.cat;
+  var idx = parseInt(el.dataset.idx);
+  var sd = specData[cat];
+  if (sd.type === 'single') {
+    var pills = el.parentElement.querySelectorAll('.spec-pill');
+    pills.forEach(function(p) { p.classList.remove('on'); });
+    el.classList.add('on');
+    _specSelections[cat] = idx;
+  } else {
+    el.classList.toggle('on');
+    var sel = _specSelections[cat];
+    var pos = sel.indexOf(idx);
+    if (pos >= 0) sel.splice(pos, 1);
+    else sel.push(idx);
+  }
+  updateSpecPrice();
+}
+
+function closeMethodPopup() {
+  var el = document.getElementById('methodPopupOverlay');
+  if (el) el.remove();
+  _specBounceCard = null;
+  var detailPage = document.getElementById('page-detail');
+  if (!detailPage || !detailPage.classList.contains('show')) {
+    document.getElementById('navBar').style.display = '';
+  }
+}
+
+function updateDetailPrice() {
+  var price = 0;
+  if (_detailId && _detailId.startsWith('combo') && comboData[_detailId]) {
+    price = comboData[_detailId].price + (_comboExtras || 0);
+  } else {
+    var card = document.querySelector('.menu-card[data-id="'+_detailId+'"]');
+    price = parseFloat(card?.dataset.price || 0);
+  }
+  price = Math.round(price * _detailQty * 10) / 10;
+  document.getElementById('detailPrice').textContent = '¥'+Number(price).toFixed(1);
+}
+
+function detailChangeQty(delta) {
+  _detailQty = Math.max(1, _detailQty + delta);
+  document.getElementById('detailQty').textContent = _detailQty;
+  updateDetailPrice();
+}
+
+function detailAddToCart() {
+  if (!_detailId) return;
+  var cartPrice, cartName;
+  var specParts = [];
+  if (_detailId.startsWith('combo') && comboData[_detailId]) {
+    var c = comboData[_detailId];
+    cartPrice = c.price + (_comboExtras || 0);
+    cartName = c.name;
+    // Build spec summary from modified items
+    var comboSpecs = _comboItemSpecs[_detailId] || {};
+    Object.keys(comboSpecs).forEach(function(key) {
+      var sel = comboSpecs[key];
+      var parts = [];
+      if (sel['做法'] !== undefined && sel['做法'] > 0) parts.push(specData['做法'].options[sel['做法']]);
+      if (sel['分量'] !== undefined && sel['分量'] > 0) parts.push(specData['分量'].options[sel['分量']].name);
+      var addons = (sel['加料'] || []).map(function(i) { return specData['加料'].options[i].name; });
+      if (addons.length) parts.push('加'+addons.join('、'));
+      if (parts.length) specParts.push(parts.join(' '));
+    });
+  } else {
+    var card = document.querySelector('.menu-card[data-id="'+_detailId+'"]');
+    cartPrice = parseFloat(card?.dataset.price || 0);
+    cartName = card?.dataset.name || '';
+  }
+  for (var i = 0; i < _detailQty; i++) {
+    state.menuCart.push({
+      id: _detailId, name: cartName,
+      price: cartPrice, qty: 1,
+      spec: specParts.join('; ')
+    });
+  }
+  updateMenuCart();
+  hideDetailPage();
+}
+
+function hideDetailPage() {
+  document.getElementById('page-detail').classList.remove('show');
+  document.getElementById('detailScroll').scrollTop = 0;
+  document.getElementById('navBar').style.display = '';
+  closeMethodPopup();
+  _detailId = null;
+}
+
+function addDetailToCart() {
+  detailAddToCart();
+}
+
+const navTabs = [
+  {name:'首页',active:true, img:'导航栏/首页 点击.webp', off:'导航栏/首页 未点击.webp', x:0,   y:0, w:38, h:49},
+  {name:'菜单',active:false,img:'导航栏/菜单 点击.webp', off:'导航栏/菜单 未点击.webp', x:104, y:0, w:32, h:49},
+  {name:'订单',active:false,img:'导航栏/订单 点击.webp', off:'导航栏/订单 未点击.webp', x:202, y:0, w:28, h:49},
+  {name:'我的',active:false,img:'导航栏/我的 点击.webp', off:'导航栏/我的 未点击.webp', x:295, y:0, w:31, h:49},
+];
+
+function init() {
+  syncSegments();
+  renderNav();
+  updateBowl();
+  updateNoodleSize();
+  updatePrice();
+  renderJiaotou();
+  renderCondiments();
+}
+
+function entranceAnimation() {
+  const layer = document.getElementById('jiaotouLayer');
+  const items = [...layer.children];
+  const origin = toppingDefs.find(t => t.name === '牛肉');
+  const ox = origin.x, oy = origin.y;
+
+  // Compute circle center (centroid of all toppings)
+  let cx = 0, cy = 0;
+  toppingDefs.forEach(t => { cx += t.x; cy += t.y; });
+  cx /= toppingDefs.length; cy /= toppingDefs.length;
+
+  // Map: topping name → {angle, radius} from center
+  const polarMap = {};
+  toppingDefs.forEach(t => {
+    polarMap[t.name] = {
+      angle: Math.atan2(t.y - cy, t.x - cx),
+      r: Math.hypot(t.x - cx, t.y - cy)
+    };
+  });
+  const originAngle = polarMap['牛肉'].angle;
+
+  // Sort counter-clockwise from 牛肉 on the circle
+  items.sort((a, b) => {
+    const na = a.querySelector('img').alt;
+    const nb = b.querySelector('img').alt;
+    let aa = polarMap[na].angle, ab = polarMap[nb].angle;
+    if (aa < originAngle) aa += Math.PI * 2;
+    if (ab < originAngle) ab += Math.PI * 2;
+    return aa - ab;
+  });
+
+  // Move all to origin position, hidden
+  items.forEach(el => {
+    el.style.left = ox + 'px';
+    el.style.top = oy + 'px';
+    el.style.opacity = '0';
+  });
+
+  // Animate along arc using transform (GPU) from each item's own starting = 牛肉 pos
+  items.forEach((el) => {
+    const def = toppingDefs.find(t => t.name === el.querySelector('img').alt);
+    if (!def) return;
+    const targetPolar = polarMap[def.name];
+    const targetAngle = targetPolar.angle;
+    const targetR = targetPolar.r;
+    const dAngleRaw = targetAngle - originAngle;
+    const dAngle = dAngleRaw < 0 ? dAngleRaw + Math.PI * 2 : dAngleRaw;
+    const speed = 0.002; // radians per ms
+    const duration = dAngle / speed;
+
+    el.style.opacity = '1';
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const curAngle = originAngle + dAngle * t;
+      const curX = cx + targetR * Math.cos(curAngle);
+      const curY = cy + targetR * Math.sin(curAngle);
+      el.style.transform = 'translate(' + (curX - ox) + 'px,' + (curY - oy) + 'px)';
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.style.left = curX + 'px';
+        el.style.top = curY + 'px';
+        el.style.transform = '';
+      }
+    }
+
+    requestAnimationFrame(step);
+  });
+}
+
+function condimentEntrance() {
+  const scroll = document.getElementById('condimentScroll');
+  const items = [...scroll.children];
+  if (!items.length) return;
+
+  const wandouIdx = condDefs.findIndex(c => c.name === '豌豆');
+  const wandouEl = items[wandouIdx];
+  const scrollRect = scroll.getBoundingClientRect();
+  const originX = wandouEl.getBoundingClientRect().left - scrollRect.left;
+
+  // Store each item's target x
+  const targets = items.map(el => ({
+    el,
+    targetX: el.getBoundingClientRect().left - scrollRect.left,
+  }));
+
+  // Move all to 豌豆 position, hide with opacity 0
+  items.forEach(el => {
+    el.style.transition = 'none';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(' + (originX - targets.find(t => t.el === el).targetX) + 'px)';
+  });
+
+  // Same total duration as topping arc (酸辣粉)
+  const totalDuration = 3000;
+  const maxDist = Math.max(...targets.map(t => Math.abs(t.targetX - originX)));
+  const startTime = performance.now();
+
+  targets.forEach(tgt => {
+    const el = tgt.el;
+    const dist = originX - tgt.targetX;
+    const dur = maxDist > 0 ? (Math.abs(dist) / maxDist) * totalDuration : 0;
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / dur, 1);
+      const offset = originX + (tgt.targetX - originX) * t;
+      el.style.transform = 'translateX(' + (offset - tgt.targetX) + 'px)';
+      el.style.opacity = t;
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        el.style.transform = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+      }
+    }
+
+    if (dur > 0) {
+      requestAnimationFrame(step);
+    } else {
+      el.style.transform = '';
+      el.style.opacity = '';
+    }
+  });
+}
+
+function renderJiaotou() {
+  document.getElementById('jiaotouLayer').innerHTML = toppingDefs.map(t => {
+    const sel = state.toppings.includes(t.name);
+    const sz = (t.w && t.h) ? `width:${t.w}px;height:${t.h}px;` : '';
+    return `<div class="jiaotou-item" onclick="toggleTopping('${t.name}',this)" style="left:${t.x}px;top:${t.y}px;${sz}">
+      <img src="${sel?t.s:t.u}" alt="${t.name}">
+    </div>`;
+  }).join('');
+}
+
+function renderCondiments() {
+  const gaps = {葱:-20, 香菜:-21, 煎蛋:-9, 花生:-3, 芝麻:-3};
+  const scroll = document.getElementById('condimentScroll');
+  const existing = [...scroll.children];
+  // Only update existing elements' src if they exist, else rebuild
+  if (existing.length === condDefs.length) {
+    existing.forEach((el, i) => {
+      const c = condDefs[i];
+      const sel = state.condiments.includes(c.name);
+      const img = el.querySelector('img');
+      img.src = sel ? c.s : c.u;
+    });
+  } else {
+    scroll.innerHTML = condDefs.map(c => {
+      const sel = state.condiments.includes(c.name);
+      const mr = gaps[c.name] != null ? `margin-right:${gaps[c.name]}px;` : '';
+      return `<div class="condiment-item" style="${mr}" onclick="toggleCondiment('${c.name}',this)">
+        <img src="${sel?c.s:c.u}" alt="${c.name}" style="height:${c.h}px;">
+      </div>`;
+    }).join('');
+  }
+}
+
+function renderNav() {
+  document.getElementById('navBar').innerHTML = navTabs.map(t =>
+    `<div class="nav-item" onclick="switchTab('${t.name}')" style="left:${t.x}px;top:${t.y}px;width:${t.w}px;height:${t.h}px;">
+      <img src="${t.active?t.img:t.off}" alt="${t.name}">
+    </div>`
+  ).join('');
+}
+
+function selectMethod(method) {
+  state.method = method;
+  syncSegments();
+  updateBowl();
+  updatePrice();
+}
+
+function selectType(type) {
+  state.noodleType = type;
+  state.portion = '中份';
+  syncSegments();
+  updateBowl();
+  updateNoodleSize();
+  updatePrice();
+}
+
+function selectPortion(portion) {
+  state.portion = portion;
+  syncSegments();
+  updateNoodleSize();
+  updateBowlOverlays();
+  updatePrice();
+}
+
+function updateNoodleSize() {
+  const typeSizes = {
+    细面:  {中份:150, 大份:170, 巨大:190},
+    细粉:  {中份:170, 大份:190, 巨大:210},
+    刀削面:{中份:177, 大份:197, 巨大:207},
+    桂林米粉:{中份:170, 大份:190, 巨大:210},
+  };
+  const sz = (typeSizes[state.noodleType] || {})[state.portion] || 192;
+  const img = document.getElementById('bowlNoodles');
+  img.style.width = sz + 'px';
+  img.style.height = sz + 'px';
+  img.style.left = '50%';
+  img.style.top = '50%';
+  img.style.transform = 'translate(-50%,-45%)';
+  updateBrothSize();
+}
+function updateBrothSize() {
+  if (state.method !== '湿') return;
+  const b = document.getElementById('bowlBroth');
+  b.style.width = '210px';
+  b.style.height = '210px';
+  b.style.left = '50%';
+  b.style.top = '50%';
+  b.style.transform = 'translate(-50%,-50%)';
+  b.style.objectFit = 'contain';
+}
+
+function selectSpice(spice) {
+  state.spice = spice;
+  syncSegments();
+  updateBowl();
+}
+
+function randomize(e) {
+  const img = document.getElementById('randomImg');
+  if (img.dataset.animating === '1') return;
+  img.dataset.animating = '1';
+  img.style.transform = 'rotate(360deg)';
+  img.addEventListener('transitionend', function h() {
+    img.removeEventListener('transitionend', h);
+    img.style.transition = 'none';
+    img.style.transform = 'rotate(0deg)';
+    void img.offsetWidth;
+    img.style.transition = '';
+    img.dataset.animating = '';
+  });
+
+  const spices = ['不辣','微辣','爆辣'];
+  const portions = ['中份','大份','巨大'];
+  const types = ['细面','细粉','刀削面','桂林米粉'];
+  const methods = ['干','湿'];
+
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // Randomize everything
+  const spice = pick(spices);
+  const portion = pick(portions);
+  const type = pick(types);
+  const method = pick(methods);
+  const topping = pick(toppingDefs);
+
+  // Apply all
+  state.spice = spice;
+  state.portion = portion;
+  state.noodleType = type;
+  state.method = method;
+  var prevToppings = state.toppings.slice();
+  state.toppings = [topping.name];
+  state.toppingSlots = { [topping.name]: Math.floor(Math.random() * 10) };
+  state._prevBowlToppings = prevToppings;
+
+  syncSegments();
+  updateBowl();
+  updateBowlOverlays();
+  updateNoodleSize();
+  updatePrice();
+
+  // Incrementally update topping UI instead of full rebuild
+  var layer = document.getElementById('jiaotouLayer');
+  var items = layer.querySelectorAll('.jiaotou-item img');
+  items.forEach(function(img) {
+    var def = toppingDefs.find(function(t) { return t.name === img.alt; });
+    if (!def) return;
+    var selected = state.toppings.indexOf(img.alt) >= 0;
+    img.src = selected ? def.s : def.u;
+  });
+}
+
+function toggleTopping(name, el) {
+  const idx = state.toppings.indexOf(name);
+  const def = toppingDefs.find(t => t.name === name);
+  const img = el.querySelector('img');
+  const adding = idx === -1;
+  const newSrc = adding ? def.s : def.u;
+
+  // Simple opacity crossfade — no DOM creation, no forced reflow
+  img.style.opacity = '0';
+  requestAnimationFrame(function() {
+    if (idx > -1) {
+      state.toppings.splice(idx, 1);
+      delete state.toppingSlots[name];
+      if (name === '酸辣粉') {
+        const pIdx = state.condiments.indexOf('花生');
+        if (pIdx > -1) state.condiments.splice(pIdx, 1);
+        renderCondiments();
+      }
+    } else {
+      state.toppings.push(name);
+      if (name !== '酸辣粉') {
+        const used = new Set(Object.values(state.toppingSlots));
+        const free = bowlSlots.map(function(_, i) { return i; }).filter(function(i) { return !used.has(i); });
+        if (free.length) {
+          state.toppingSlots[name] = free[Math.floor(Math.random() * free.length)];
+        }
+      }
+      if (name === '酸辣粉') {
+        if (!state.condiments.includes('花生')) {
+          state.condiments.push('花生');
+          renderCondiments();
+        }
+        if (state.method !== '干') {
+          state.method = '干';
+          syncSegments();
+        }
+      }
+    }
+    img.src = newSrc;
+    img.style.opacity = '1';
+    updateBowlOverlays();
+    updatePrice();
+  });
+}
+
+
+
+function syncSegments() {
+  // Method (做法) — red bg #e67f65, beige pill, dark sel / white unsel
+  document.querySelectorAll('#methodSeg .seg-label').forEach(l => {
+    const sel = l.textContent === state.method;
+    l.style.color = sel ? '#9e5d00' : '#fff';
+    if (sel) {
+      const pill = document.getElementById('methodPill');
+      pill.style.left = l.offsetLeft + 'px';
+      pill.style.width = l.offsetWidth + 'px';
+    }
+  });
+
+  // Type (种类) — absolute labels, hardcoded Figma pill positions
+  const typePillPos = {'细面':[0,36], '细粉':[43,36], '刀削面':[80,67], '桂林米粉':[136,77]};
+  const [tl, tw] = typePillPos[state.noodleType];
+  document.getElementById('typePill').style.left = tl + 'px';
+  document.getElementById('typePill').style.width = tw + 'px';
+  document.querySelectorAll('#typeSeg .seg-label').forEach(l => {
+    l.style.color = l.textContent === state.noodleType ? '#9e5d00' : '#fff';
+  });
+
+  // Portion (份量) — beige bg #e3c9a4, red pill, beige sel / dark unsel
+  document.querySelectorAll('#portionSeg .seg-label').forEach(l => {
+    const sel = l.textContent === state.portion;
+    l.style.color = sel ? '#e3c9a4' : '#9e5d00';
+    l.style.fontWeight = sel ? '600' : '500';
+    if (sel) {
+      const pill = document.getElementById('portionPill');
+      pill.style.left = l.offsetLeft + 'px';
+      pill.style.width = l.offsetWidth + 'px';
+    }
+  });
+
+  // Spice (辣度) — beige bg #e3c9a4, red pill, beige sel / dark unsel
+  document.querySelectorAll('#spiceSeg .seg-label').forEach(l => {
+    const sel = l.textContent === state.spice;
+    l.style.color = sel ? '#e3c9a4' : '#9e5d00';
+    if (sel) {
+      const pill = document.getElementById('spicePill');
+      pill.style.left = l.offsetLeft + 'px';
+      pill.style.width = l.offsetWidth + 'px';
+    }
+  });
+}
+
+function toggleCondiment(name, el) {
+  if (el.dataset.animating === '1') return;
+  const idx = state.condiments.indexOf(name);
+  const def = condDefs.find(c => c.name === name);
+  const img = el.querySelector('img');
+  const adding = idx === -1;
+  const newSrc = adding ? def.s : def.u;
+  const duration = 400;
+
+  el.dataset.animating = '1';
+  img.style.backfaceVisibility = 'hidden';
+  img.style.transition = 'transform '+(duration/1000)+'s cubic-bezier(0.4,0,0.2,1)';
+  img.style.transform = 'rotateY(360deg)';
+
+  setTimeout(() => {
+    if (adding) {
+      state.condiments.push(name);
+    } else {
+      state.condiments.splice(idx, 1);
+    }
+    img.src = newSrc;
+    updateBowlOverlays();
+    updatePrice();
+  }, duration * 0.5);
+
+  img.addEventListener('transitionend', function handler() {
+    img.removeEventListener('transitionend', handler);
+    img.style.transition = '';
+    img.style.transform = '';
+    img.style.backfaceVisibility = '';
+    el.dataset.animating = '';
+  });
+}
+
+function switchTab(name) {
+  setTimeout(preloadAllAssets, 0); // async, continue preloading during transitions
+  var currentTab = navTabs.find(function(t) { return t.active; });
+  var fromHome = currentTab && currentTab.name === '首页';
+  var toMenu = name === '菜单';
+  var fromMenu = currentTab && currentTab.name === '菜单';
+  var toOrders = name === '订单';
+  var fromOrders = currentTab && currentTab.name === '订单';
+  var toMe = name === '我的';
+
+  if (fromHome && toMenu) {
+    var overlay = document.getElementById('loadingOverlay');
+    var gif = overlay ? overlay.querySelector('.loading-gif') : null;
+    var text = overlay ? overlay.querySelector('.loading-text') : null;
+    if (gif) gif.src = '小猪搅拌面条.gif';
+    if (text) text.textContent = '正在准备美味...';
+    if (overlay) overlay.classList.add('show');
+    doSwitchTab(name);
+    // Aggressive preloading during loading animation
+    var preloadRounds = 0, maxRounds = 8;
+    function preloadTick() {
+      preloadAllAssets();
+      preloadRounds++;
+      if (preloadRounds < maxRounds) setTimeout(preloadTick, 200);
+    }
+    setTimeout(preloadTick, 100);
+    setTimeout(function() {
+      if (overlay) overlay.classList.add('fade-out');
+      setTimeout(function() {
+        if (overlay) { overlay.classList.remove('show'); overlay.classList.remove('fade-out'); }
+      }, 400);
+    }, 2500);
+    return;
+  }
+
+  // Menu ↔ Orders, Orders ↔ Me: cross-fade
+  var nonHome = ['菜单','订单','我的'];
+  if (nonHome.includes(currentTab && currentTab.name) && nonHome.includes(name)) {
+    var pageMap = { '菜单':'page-menu', '订单':'page-order', '我的':'page-me' };
+    var oldId = pageMap[currentTab.name];
+    var newId = pageMap[name];
+    var oldPage = document.getElementById(oldId);
+    var newPage = document.getElementById(newId);
+    // Show new page on top at opacity 0, then fade in over old page
+    newPage.style.display = 'block';
+    newPage.style.opacity = '0';
+    newPage.style.zIndex = '11';
+    newPage.style.animation = 'none';
+    void newPage.offsetHeight;
+    newPage.style.animation = 'pageFadeIn 0.3s ease forwards';
+    // doSwitchTab will hide old page — keep it visible underneath during fade
+    doSwitchTab(name);
+    oldPage.style.display = 'block';
+    // After fade-in completes, remove old page and clean up
+    setTimeout(function() {
+      oldPage.style.display = 'none';
+      newPage.style.zIndex = '';
+      newPage.style.animation = '';
+      newPage.style.opacity = '';
+    }, 350);
+    return;
+  }
+
+  doSwitchTab(name);
+}
+
+function doSwitchTab(name) {
+  navTabs.forEach(t => t.active = (t.name === name));
+  renderNav();
+  closeCartPanel();
+  // Hide waiting/confirm/detail pages when navigating away
+  var wp = document.getElementById('page-waiting');
+  wp.classList.remove('show');
+  wp.style.zIndex = '300';
+  document.getElementById('page-confirm').classList.remove('show');
+  document.getElementById('page-detail').classList.remove('show');
+  var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.remove('show');
+  // Toggle pages
+  document.getElementById('page-menu').style.display = (name === '菜单') ? 'block' : 'none';
+  document.getElementById('page-order').style.display = (name === '订单') ? 'block' : 'none';
+  document.getElementById('page-me').style.display = (name === '我的') ? 'block' : 'none';
+  // Toggle home/menu mode
+  const app = document.querySelector('.app');
+  if (name === '菜单') {
+    app.classList.add('on-menu');
+    if (!state._menuRendered) { renderMenuCards(); state._menuRendered = true; }
+  } else {
+    app.classList.remove('on-menu');
+  }
+  if (name === '首页') {
+    bgm.init().then(() => bgm.play());
+  } else {
+    bgm.stop();
+  }
+  if (name === '订单') renderOrderPage();
+  if (name === '我的') renderMePage();
+}
+
+function renderOrderPage() {
+  var list = document.getElementById('orderList');
+  if (!list) return;
+  if (state.orderHistory.length === 0) {
+    list.innerHTML = '<div class="order-empty"><div class="order-empty-row"><span class="order-empty-line"></span><span class="order-empty-text">暂无订单</span><span class="order-empty-line"></span></div><img class="order-pig-stamp" src="小猪印章.webp" alt=""></div>';
+    document.getElementById('orderLoadMore').style.display = 'none';
+    return;
+  }
+  var html = '';
+  state.orderHistory.forEach(function(order, idx) {
+    var imgsHtml = '';
+    order.items.forEach(function(item) {
+      imgsHtml += '<div class="order-item-thumb"><img src="'+getCartImg(item.name)+'" alt="" onerror="this.src=\'购物车菜品/清空.webp\'"></div>';
+    });
+    html += '<div class="order-card">'+
+      '<div class="order-card-header">'+
+        '<span class="order-store-name">'+order.store+'</span>'+
+        '<span class="order-dine-tag">'+order.dineType+'</span>'+
+      '</div>'+
+      '<span class="order-status">'+order.status+'</span>'+
+      '<div class="order-date">'+order.date+'</div>'+
+      '<div class="order-number-badge">No.'+order.id+'</div>'+
+      '<div class="order-total">¥'+order.total.toFixed(0)+'</div>'+
+      '<div class="order-items-row">'+imgsHtml+'</div>'+
+      '<div class="order-card-footer">'+
+        '<button class="order-rebuy-btn" onclick="rebuyOrder('+idx+')">再来一单</button>'+
+      '</div>'+
+    '</div>';
+  });
+  list.innerHTML = html;
+  document.getElementById('orderLoadMore').style.display = 'block';
+}
+
+function rebuyOrder(idx) {
+  var order = state.orderHistory[idx];
+  if (!order) return;
+  order.items.forEach(function(item) {
+    var existing = state.menuCart.find(function(i) { return i.id === item.id && i.spec === item.spec; });
+    if (existing) {
+      existing.qty = (existing.qty || 1) + (item.qty || 1);
+    } else {
+      state.menuCart.push({
+        id: item.id, name: item.name, price: item.price,
+        qty: item.qty || 1, spec: item.spec || ''
+      });
+    }
+  });
+  updateMenuCart();
+  switchTab('菜单');
+  setTimeout(function() {
+    if (state.menuCart.length > 0) openCartPanel();
+  }, 400);
+}
+
+function renderMePage() {
+  // Populate "我的最爱" from order history — collect unique items
+  var favList = document.getElementById('meFavList');
+  if (!favList) return;
+  var seen = {};
+  var favItems = [];
+  // Walk order history from newest to oldest, collect first occurrence of each item
+  state.orderHistory.forEach(function(order) {
+    order.items.forEach(function(item) {
+      if (!seen[item.id] && item.spec) {
+        seen[item.id] = true;
+        favItems.push(item);
+      }
+    });
+  });
+  if (favItems.length === 0) {
+    favList.innerHTML = '<div style="font-size:12px;color:#B4B4B4;text-align:center;padding:20px 0;">下单后这里会出现你常点的美味~</div>';
+    return;
+  }
+  var html = '';
+  favItems.forEach(function(item) {
+    html += '<div class="me-fav-item">'+
+      '<div class="me-fav-thumb"><img src="'+getCartImg(item.name)+'" alt="" onerror="this.src=\'购物车菜品/清空.webp\'"></div>'+
+      '<div class="me-fav-info">'+
+        '<div class="me-fav-name">'+item.name+'</div>'+
+        '<div class="me-fav-spec">'+(item.spec||'')+'</div>'+
+      '</div>'+
+      '<button class="me-fav-rebuy" onclick="rebuyFavItem(\''+item.id+'\')">再来一单</button>'+
+    '</div>';
+  });
+  favList.innerHTML = html;
+}
+
+function rebuyFavItem(id) {
+  // Find the first order containing this item and re-add it
+  var item = null;
+  state.orderHistory.some(function(order) {
+    return order.items.some(function(i) {
+      if (i.id === id && i.spec) { item = i; return true; }
+    });
+  });
+  if (!item) return;
+  state.menuCart.push({
+    id: item.id, name: item.name, price: item.price,
+    qty: item.qty || 1, spec: item.spec || ''
+  });
+  updateMenuCart();
+  switchTab('菜单');
+  setTimeout(function() {
+    if (state.menuCart.length > 0) openCartPanel();
+  }, 400);
+}
+
+function updateBowl() {
+  const isDry = state.method === '干';
+  const hasSuanlafen = state.toppings.includes('酸辣粉');
+  const b = document.getElementById('bowlBroth');
+  const n = document.getElementById('bowlNoodles');
+  const noodleSrc = '面/' + state.noodleType + ' ' + state.spice + '.webp';
+  const brothSrc = '碗/' + state.spice + '.webp';
+  if (isDry || hasSuanlafen) {
+    b.style.display = 'none';
+    n.style.display = '';
+    if (n._lastSrc !== noodleSrc) { n.src = noodleSrc; n._lastSrc = noodleSrc; }
+  } else {
+    if (b._lastSrc !== brothSrc) { b.src = brothSrc; b._lastSrc = brothSrc; }
+    b.style.display = '';
+    n.style.display = '';
+    if (n._lastSrc !== noodleSrc) { n.src = noodleSrc; n._lastSrc = noodleSrc; }
+  }
+  updateBrothSize();
+  updateBowlOverlays();
+}
+
+function _condimentPos(n) {
+  if (n === '芝麻') return 'left:50%;top:50%;transform:translate(-50%,-50%);';
+  if (n === '豌豆') return 'left:130px;top:96px;transform:translate(-50%,-50%);';
+  let h = 0; for (let i = 0; i < n.length; i++) h = ((h << 5) - h + n.charCodeAt(i)) | 0;
+  var angle = (h * 2.39996) % (Math.PI * 2);
+  var dist = 20 + ((h * 3.14159) % 56);
+  return 'left:'+(96+Math.cos(angle)*dist)+'px;top:'+(96+Math.sin(angle)*dist)+'px;transform:translate(-50%,-50%);';
+}
+
+function _toppingHTML(n, pos, isNew) {
+  var isZajiang = n === '杂酱';
+  var hw = isZajiang ? 42.5 : 60;
+  var szStyle = isZajiang ? 'width:85px;height:85px;' : '';
+  var animClass = isNew ? ' class="spin-in"' : '';
+  var animVars = isNew ? '--sx:'+(96-pos[0])+'px;--sy:'+(96-pos[1])+'px;' : '';
+  return '<img src="碗里浇头/'+n+'.webp" alt="'+n+'"'+animClass+' style="left:'+(pos[0]-hw)+'px;top:'+(pos[1]-hw)+'px;'+szStyle+animVars+'">';
+}
+
+function _condimentHTML(n) {
+  var sz = n === '豌豆' ? 'width:80px;height:80px;' : '';
+  return '<img src="碗里小料/'+n+'.webp" alt="'+n+'" style="'+_condimentPos(n)+sz+'">';
+}
+
+function updateBowlOverlays() {
+  var portionSizes = {中份:170, 大份:190, 巨大:210};
+  var ps = portionSizes[state.portion] || 192;
+  var hasSuanlafen = state.toppings.includes('酸辣粉');
+
+  // 酸辣粉
+  var slfEl = document.getElementById('bowlSuanlafen');
+  if (hasSuanlafen) {
+    if (!slfEl._hasSLF) {
+      slfEl.innerHTML = '<img src="碗里浇头/酸辣粉.webp" alt="酸辣粉" style="width:'+ps+'px;height:'+ps+'px;left:50%;top:50%;transform:translate(-50%,-50%);">';
+      slfEl._hasSLF = true;
+    }
+    slfEl.style.display = '';
+  } else {
+    slfEl._hasSLF = false;
+    slfEl.innerHTML = '';
+    slfEl.style.display = 'none';
+  }
+
+  // Toppings — incremental update
+  var otherToppings = state.toppings.filter(function(n) { return n !== '酸辣粉'; });
+  var prevSet = new Set(state._prevBowlToppings || []);
+  var spinIns = new Set(otherToppings.filter(function(n) { return !prevSet.has(n); }));
+  state._prevBowlToppings = otherToppings.slice();
+
+  var tpEl = document.getElementById('bowlToppings');
+  var currentImgs = tpEl.querySelectorAll('img');
+  var currentNames = new Set();
+  currentImgs.forEach(function(img) { currentNames.add(img.alt); });
+
+  // Remove toppings no longer selected
+  currentImgs.forEach(function(img) {
+    if (otherToppings.indexOf(img.alt) === -1) img.remove();
+  });
+
+  // Add new toppings
+  otherToppings.forEach(function(n) {
+    if (!currentNames.has(n)) {
+      var pos;
+      if (n === '杂酱') { pos = [96, 96]; }
+      else { var si = state.toppingSlots[n]; pos = (si != null) ? bowlSlots[si] : [Math.random()*120+36, Math.random()*120+36]; }
+      var isNew = spinIns.has(n);
+      tpEl.insertAdjacentHTML('beforeend', _toppingHTML(n, pos, isNew));
+    }
+  });
+
+  // Condiments — incremental update
+  var bowlCondiments = state.condiments.filter(function(n) { return !(hasSuanlafen && n === '花生'); });
+  var cdEl = document.getElementById('bowlCondiments');
+  var cdImgs = cdEl.querySelectorAll('img');
+  var cdNames = new Set();
+  cdImgs.forEach(function(img) { cdNames.add(img.alt); });
+
+  cdImgs.forEach(function(img) {
+    if (bowlCondiments.indexOf(img.alt) === -1) img.remove();
+  });
+  bowlCondiments.forEach(function(n) {
+    if (!cdNames.has(n)) cdEl.insertAdjacentHTML('beforeend', _condimentHTML(n));
+  });
+
+  document.getElementById('bowlNoodles').style.display = hasSuanlafen ? 'none' : '';
+  document.getElementById('bowlBroth').style.display = (state.method === '干' || hasSuanlafen) ? 'none' : '';
+}
+
+const toppingPrices = {
+  猪脚:   {combo:18, indiv:12},
+  牛肉:   {combo:14, indiv:10},
+  杂酱:   {combo:11, indiv:7},
+  鸡杂:   {combo:13, indiv:7},
+  香菇鸡: {combo:13, indiv:7},
+  牛杂:   {combo:14, indiv:10},
+  肥肠:   {combo:14, indiv:10},
+  红烧肉: {combo:13, indiv:8},
+  酸辣粉: {combo:10, indiv:0},
+  排骨:   {combo:14, indiv:10},
+};
+const condimentPrices = {煎蛋:2};
+
+function calcPrice() {
+  let price = 8; // 素面
+  if (state.toppings.length > 0) {
+    const first = state.toppings[0];
+    const tp = toppingPrices[first];
+    price = tp ? tp.combo : 8;
+    for (let i = 1; i < state.toppings.length; i++) {
+      const t = state.toppings[i];
+      price += (toppingPrices[t] || {}).indiv || 0;
+    }
+  }
+  state.condiments.forEach(c => {
+    price += condimentPrices[c] || 0;
+  });
+  const portion = {中份:0, 大份:3, 巨大:6}[state.portion] || 0;
+  var total = price + portion;
+  if (state.dineType === '外带') total += 1;
+  return total;
+}
+function updatePrice() {
+  const el = document.getElementById('priceTag');
+  const newPrice = calcPrice();
+  if (el.textContent !== String(newPrice)) {
+    el.textContent = newPrice;
+    el.classList.add('pop');
+    el.addEventListener('animationend', function h() { el.removeEventListener('animationend', h); el.classList.remove('pop'); });
+  }
+}
+
+function smartAddToCart() {
+  // Mapping: topping name → menu item id (畅销榜单)
+  var toppingToDish = {
+    '排骨':'b14', '牛肉':'b02', '牛杂':'b07', '红烧肉':'b09',
+    '肥肠':'b08', '猪脚':'b01', '鸡杂':'b05', '杂酱':'b03',
+    '香菇鸡':'b06', '酸辣粉':'b11'
+  };
+
+  var mainDishId = null;
+  var primaryTopping = null;
+
+  // 豌杂面: 杂酱 + 豌豆
+  if (state.toppings.indexOf('杂酱') >= 0 && state.condiments.indexOf('豌豆') >= 0) {
+    mainDishId = 'b04';
+    primaryTopping = '杂酱';
+  } else {
+    for (var i = 0; i < state.toppings.length; i++) {
+      var tid = toppingToDish[state.toppings[i]];
+      if (tid) { mainDishId = tid; primaryTopping = state.toppings[i]; break; }
+    }
+  }
+
+  // No matching topping → 素面
+  if (!mainDishId) mainDishId = 'b12';
+
+  // Find main item data
+  var mainItem = null;
+  menuData.forEach(function(cat) {
+    cat.items.forEach(function(item) {
+      if (item.id === mainDishId) mainItem = item;
+    });
+  });
+
+  // Build spec string from home page config
+  var methodLabel = state.method === '干' ? '干拌' : '汤面';
+  var specParts = [methodLabel, state.noodleType, state.portion, state.spice];
+  // 忌口 from condiments
+  var hasCong = state.condiments.indexOf('葱') >= 0;
+  var hasCilantro = state.condiments.indexOf('香菜') >= 0;
+  if (!hasCong && !hasCilantro) specParts.push('不加葱/香菜');
+  else if (!hasCong) specParts.push('不加葱');
+  else if (!hasCilantro) specParts.push('不加香菜');
+  // 浇头
+  if (state.toppings.length > 0) specParts.push('加'+state.toppings.join('、'));
+  var specLine = specParts.join(' · ');
+
+  var homePrice = calcPrice();
+  if (mainItem) {
+    state.menuCart.push({
+      id: mainItem.id, name: mainItem.name,
+      price: homePrice, qty: 1,
+      spec: specLine
+    });
+  }
+
+  // Update cart bar
+  updateMenuCart();
+
+  // Navigate to menu page
+  switchTab('菜单');
+
+  // Open cart panel after switch
+  setTimeout(function() {
+    if (state.menuCart.length > 0) openCartPanel();
+  }, 400);
+}
+
+function addToOrder() {
+  smartAddToCart();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 1500);
+}
+
+// ===== Asset Preloading =====
+var _preloaded = {};
+function preloadAsset(src) {
+  if (!src || _preloaded[src]) return;
+  _preloaded[src] = true;
+  var img = new Image();
+  img.src = src;
+}
+
+// Collect all unique asset URLs (fast synchronous scan)
+function collectAllAssetUrls() {
+  var urls = new Set();
+  function add(u) { if (u) urls.add(u); }
+  try {
+    // 1. Static DOM images
+    document.querySelectorAll('img[src]').forEach(function(el) { add(el.src); });
+    document.querySelectorAll('picture source[srcset]').forEach(function(el) { add(el.srcset); });
+
+    // 2. Noodle × spice combinations
+    ['细面','细粉','刀削面','桂林米粉'].forEach(function(t) {
+      ['微辣','爆辣','不辣'].forEach(function(s) { add('面/' + t + ' ' + s + '.webp'); });
+    });
+
+    // 3. Bowl images
+    ['微辣','爆辣','不辣'].forEach(function(s) { add('碗/' + s + '.webp'); });
+    add('碗/干碗.webp');
+
+    // 4. Bowl toppings & condiments
+    ['排骨','牛肉','牛杂','红烧肉','肥肠','猪脚','鸡杂','酸辣粉','杂酱','香菇鸡'].forEach(function(n) { add('碗里浇头/' + n + '.webp'); });
+    ['葱','香菜','煎蛋','花生','芝麻','豌豆'].forEach(function(n) { add('碗里小料/' + n + '.webp'); });
+
+    // 5. Topping & condiment UI from data arrays
+    if (typeof toppingDefs !== 'undefined') toppingDefs.forEach(function(t) { add(t.u); add(t.s); });
+    if (typeof condDefs !== 'undefined') condDefs.forEach(function(c) { add(c.u); add(c.s); });
+
+    // 6. Menu cards from menuData
+    if (typeof menuData !== 'undefined') menuData.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        if (item.img) add(item.img);
+        if (item.imgSel) add(item.imgSel);
+        if (item.items) { item.items.forEach(function(sub) { if (sub.img) add(sub.img); if (sub.imgSel) add(sub.imgSel); }); }
+      });
+    });
+
+    // 6b. Combo meal detail page images
+    if (typeof comboData !== 'undefined') Object.values(comboData).forEach(function(c) {
+      if (c.hero) add(c.hero);
+      if (c.sections) { c.sections.forEach(function(sec) { sec.items.forEach(function(sub) { if (sub.img) add(sub.img); if (sub.imgSel) add(sub.imgSel); }); }); }
+    });
+    if (typeof itemHeroMap !== 'undefined') Object.values(itemHeroMap).forEach(function(v) { add(v); });
+
+    // 7. Category tabs
+    ['超值套餐','招牌推荐','特色小面','水饺抄手','凉面凉皮','饮品小料'].forEach(function(n) {
+      add('种类/' + n + '（选择前）.webp'); add('种类/' + n + '（选择后）.webp');
+    });
+
+    // 8. Nav bar
+    ['首页','菜单','订单','我的'].forEach(function(n) {
+      add('导航栏/' + n + ' 未点击.webp'); add('导航栏/' + n + ' 点击.webp');
+    });
+
+    // 9. Detail page images
+    ['普通单人套餐','豪华单人套餐','多人乐享套餐'].forEach(function(n) { add('详情页2/套餐详情页/套餐页/详情大图/' + n + '（详情页大图）.webp'); });
+    ['肥肠','现做煎蛋'].forEach(function(n) {
+      add('详情页2/套餐详情页/套餐页/小料小炒/' + n + ' 未选中（详情页卡片）.webp');
+      add('详情页2/套餐详情页/套餐页/小料小炒/' + n + ' 选中（详情页卡片）.webp');
+    });
+    ['豆奶自取'].forEach(function(n) {
+      add('详情页2/套餐详情页/套餐页/饮料/' + n + ' 未选中（详情页卡片）.webp');
+      add('详情页2/套餐详情页/套餐页/饮料/' + n + ' 选中（详情页卡片）.webp');
+    });
+    ['牛肉面','猪脚面'].forEach(function(n) {
+      add('详情页2/套餐详情页/套餐页/主食/' + n + ' 未选中.webp');
+      add('详情页2/套餐详情页/套餐页/主食/' + n + ' 选中.webp');
+    });
+    ['排骨','牛肉','牛杂','红烧肉','肥肠','猪蹄','鸡杂','香菇鸡','杂酱','豆奶','可乐','雪碧','怡宝','煎蛋'].forEach(function(n) { add('详情页2/小料详情页/' + n + '.webp'); });
+
+    // 10. Confirm order page extras
+    ['确认订单/确认订单背景.webp','确认订单/确认订单背景.webp','确认订单/确认订单页标题栏.webp','确认订单/确认订单页标题栏.webp','确认订单/微信支付图标.webp'].forEach(function(p) { add(p); });
+    if (typeof confirmAddons !== 'undefined') confirmAddons.forEach(function(a) { if (a.img) add(a.img); });
+
+    // 11. Cart images
+    var cartMap = {
+      '普通单人套餐':'普通单人套餐（购物车）.webp','豪华单人套餐':'豪华单人套餐（购物车）@4x.webp','多人乐享套餐':'多人乐享套餐（购物车）.webp',
+      '猪脚面':'猪脚面（购物车）.webp','牛肉面':'牛肉面（购物车）.webp','杂酱面':'杂酱面（购物车）.webp',
+      '豌杂面':'豌豆杂酱面.webp','鸡杂面':'鸡杂面（购物车）.webp','香菇鸡面':'香菇鸡面（购物车）.webp',
+      '牛杂面':'牛杂面（购物车）.webp','肥肠面':'肥肠面（购物车）.webp','红烧肉面':'红烧肉面（购物车）.webp',
+      '宜宾燃面':'宜宾燃面（购物车）.webp','酸辣粉':'酸辣粉（购物车）.webp','素面':'素面（购物车）.webp',
+      '辣椒炒肉面':'辣椒炒肉面（购物车）.webp','排骨面':'排骨面（购物车）.webp',
+      '水饺':'水饺（购物车）.webp','抄手':'抄手（购物车）.webp','抄手面':'抄手面（购物车）.webp',
+      '牛肉抄手':'牛肉抄手（购物车）.webp','肥肠抄手':'肥肠抄手（购物车）.webp',
+      '凉面':'凉面（购物车）.webp','凉皮':'凉皮（购物车）.webp',
+      '牛肉':'牛肉（购物车）.webp','牛杂':'牛杂（购物车）.webp','肥肠':'肥肠（购物车）.webp',
+      '排骨':'排骨（购物车）.webp','红烧肉':'红烧肉（购物车）.webp','鸡杂':'鸡杂（购物车）.webp',
+      '香菇鸡':'香菇鸡（购物车）.webp','杂酱':'杂酱（购物车）.webp','猪蹄':'猪蹄（购物车）.webp',
+      '煎蛋':'煎蛋（购物车）.webp','可乐':'可乐（购物车）.webp','雪碧':'雪碧（购物车）.webp',
+      '豆奶':'豆奶（购物车）.webp','怡宝':'怡宝（购物车）.webp',
+      '现做煎蛋':'煎蛋（购物车）.webp','美味猪蹄':'猪蹄（购物车）.webp','大块牛肉':'牛肉（购物车）.webp',
+      '冰镇可乐':'可乐（购物车）.webp','酱香肥肠':'肥肠（购物车）.webp',
+    };
+    Object.values(cartMap).forEach(function(v) { add(v); });
+
+    // 12. Dino game assets
+    if (typeof P !== 'undefined') Object.values(P).forEach(function(v) { add(v); });
+    add('dino-assets/开始游戏键.webp');
+    add('dino-assets/重玩键.webp');
+    add('dino-assets/锅的原始状态.webp');
+
+    // 13. Loading overlay GIFs (dynamically set via .src)
+    add('小猪入锅.gif');
+    add('小猪搅拌面条.gif');
+
+    // 14. Price floating UI
+    add('价格浮窗/碗.webp');
+    add('价格浮窗/碗（选中后）.webp');
+  } catch(e) { console.warn('[preload] collect error:', e); }
+  return Array.from(urls);
+}
+
+// Load assets with concurrency control and progress tracking
+function loadAssetsTracked(urls, onProgress, onDone) {
+  // Filter out already-preloaded URLs
+  var remaining = [];
+  for (var i = 0; i < urls.length; i++) {
+    if (urls[i] && !_preloaded[urls[i]]) remaining.push(urls[i]);
+  }
+  var total = remaining.length;
+  if (total === 0) { if (onDone) onDone(); return; }
+
+  var done = 0, nextIdx = 0, active = 0;
+  var MAX = 6;
+
+  function onOneDone() {
+    done++;
+    active--;
+    if (onProgress) onProgress(done, total);
+    pump();
+  }
+
+  function pump() {
+    while (active < MAX && nextIdx < remaining.length) {
+      var url = remaining[nextIdx++];
+      active++;
+      _preloaded[url] = true;
+      var img = new Image();
+      img.onload = onOneDone;
+      img.onerror = onOneDone;
+      img.src = url;
+    }
+    if (done >= total && onDone) { var cb = onDone; onDone = null; cb(); }
+  }
+
+  pump();
+}
+
+// Fire-and-forget preload (for switchTab / dismissSplash)
+function preloadAllAssets() {
+  loadAssetsTracked(collectAllAssetUrls(), null, null);
+}
+
+// ===== Loading Page =====
+function initLoadingPage() {
+  var page = document.getElementById('loadingPage');
+  var bar = document.getElementById('loadingBarFill');
+  var pct = document.getElementById('loadingPct');
+  var tip = document.getElementById('loadingTip');
+  if (!page || !bar || !pct) return;
+
+  // Collect all asset URLs first (fast, synchronous)
+  var allUrls = collectAllAssetUrls();
+  var total = 0;
+  for (var i = 0; i < allUrls.length; i++) {
+    if (allUrls[i] && !_preloaded[allUrls[i]]) total++;
+  }
+
+  if (total === 0) {
+    // Everything's already cached — skip loading page immediately
+    page.classList.add('hide');
+    setTimeout(function() { page.classList.add('done'); }, 500);
+    return;
+  }
+
+  var startTime = Date.now();
+  var minShowTime = 800; // minimum time to show loading page (ms)
+
+  // Random tips while loading
+  var tips = ['面条正在擀制中...','高汤正在熬制中...','辣椒正在翻炒中...','花生正在剥壳中...','牛肉正在卤制中...','红油正在炼制中...','臊子正在炒制中...','香菜正在切碎中...'];
+  var tipIdx = 0;
+  tip.textContent = tips[0];
+  var tipTimer = setInterval(function() {
+    tipIdx = (tipIdx + 1) % tips.length;
+    tip.textContent = tips[tipIdx];
+  }, 1200);
+
+  loadAssetsTracked(allUrls, function(done, totalCount) {
+    var pctVal = Math.round((done / totalCount) * 100);
+    bar.style.width = pctVal + '%';
+    pct.textContent = pctVal + '%';
+  }, function() {
+    clearInterval(tipTimer);
+    tip.textContent = '';
+    bar.style.width = '100%';
+    pct.textContent = '完成!';
+
+    // Ensure minimum display time
+    var elapsed = Date.now() - startTime;
+    var remaining = Math.max(0, minShowTime - elapsed);
+    setTimeout(function() {
+      page.classList.add('hide');
+      setTimeout(function() { page.classList.add('done'); }, 500);
+    }, remaining);
+  });
+}
+
+// Start loading page as soon as possible
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  initLoadingPage();
+} else {
+  document.addEventListener('DOMContentLoaded', initLoadingPage);
+}
+
+function dismissSplash(action) {
+  const splash = document.getElementById('splashAd');
+  if (splash.dataset.flying === '1') return;
+  splash.dataset.flying = '1';
+  setTimeout(preloadAllAssets, 0); // async, don't block animation
+  bgm.init().then(() => bgm.play()); // start bgm on user gesture
+
+  if (action === 'cancel') {
+    // Fade out splash (no door animation)
+    splash.classList.add('hide');
+    // Reset to empty bowl defaults
+    state.toppings = [];
+    state.toppingSlots = {};
+    state.condiments = [];
+    state.spice = '微辣';
+    state.portion = '大份';
+    state.noodleType = '细面';
+    state.method = '干';
+    state._prevBowlToppings = [];
+    syncSegments();
+    updateBowl();
+    updateNoodleSize();
+    updatePrice();
+    // Only shimmer on segment controls, no scale / dark overlay
+    document.querySelector('.app').classList.add('shimmer');
+    renderJiaotou();
+    renderCondiments();
+    document.querySelectorAll('.jiaotou-item').forEach(function(el) { el.style.opacity = '0'; });
+    requestAnimationFrame(function() {
+      entranceAnimation();
+      condimentEntrance();
+    });
+    // Remove splash from DOM after fade-out
+    setTimeout(function() {
+      splash.style.display = 'none';
+    }, 600);
+    return;
+  }
+
+  // custom: preset state + full door/fly transition
+  state.toppings = ['排骨'];
+  state.toppingSlots = { '排骨': Math.floor(Math.random() * 10) };
+  state.spice = '爆辣';
+  state.portion = '中份';
+  state.noodleType = '刀削面';
+  state.method = '湿';
+  state._prevBowlToppings = [];
+  syncSegments();
+  updateBowl();
+  updateNoodleSize();
+  updatePrice();
+  splash.querySelector('.splash-noodle-img').classList.add('fly-to-bowl');
+  splash.classList.add('fly-away');
+  document.querySelector('.app').classList.add('enter');
+  setTimeout(function() {
+    renderJiaotou();
+    renderCondiments();
+    document.querySelectorAll('.jiaotou-item').forEach(function(el) { el.style.opacity = '0'; });
+    requestAnimationFrame(function() {
+      entranceAnimation();
+      condimentEntrance();
+    });
+  }, 1200);
+  setTimeout(function() {
+    splash.style.display = 'none';
+  }, 6000);
+}
+
+// ===== Confirm Order Page =====
+const confirmAddons = [
+  {id:'ca01', name:'现做煎蛋', desc:'下单以后现煎', price:2, img:'确认订单/现做煎蛋（推荐加餐）.webp'},
+  {id:'ca02', name:'美味猪蹄', desc:'软糯香甜', price:12, img:'确认订单/美味猪蹄（推荐加餐）.webp'},
+  {id:'ca03', name:'大块牛肉', desc:'酱香牛肉，入口即化', price:10, img:'确认订单/大块牛肉（推荐加餐）.webp'},
+  {id:'ca04', name:'冰镇可乐', desc:'清爽一夏', price:2, img:'确认订单/冰镇可乐（推荐加餐）.webp'},
+  {id:'ca05', name:'酱香肥肠', desc:'软糯入味，鲜辣醇厚', price:10, img:'确认订单/酱香肥肠（推荐加餐）.webp'},
+];
+var _confirmDineType = '堂食';
+
+function showConfirmPage() {
+  _confirmDineType = state.dineType || '堂食';
+  renderConfirmPage();
+  document.getElementById('page-confirm').classList.add('show');
+  document.getElementById('page-confirm').scrollTop = 0;
+  document.getElementById('navBar').style.display = 'none';
+}
+
+function hideConfirmPage() {
+  document.getElementById('page-confirm').classList.remove('show');
+  document.getElementById('navBar').style.display = '';
+}
+
+function confirmPay() {
+  // Save order to history
+  if (state.menuCart.length > 0) {
+    state._orderCount++;
+    var now = new Date();
+    var dateStr = now.getFullYear()+'-'+
+      String(now.getMonth()+1).padStart(2,'0')+'-'+
+      String(now.getDate()).padStart(2,'0')+' '+
+      String(now.getHours()).padStart(2,'0')+':'+
+      String(now.getMinutes()).padStart(2,'0')+':'+
+      String(now.getSeconds()).padStart(2,'0');
+    var total = state.menuCart.reduce(function(s,i){ return s + i.price * (i.qty||1); }, 0);
+    var count = state.menuCart.reduce(function(s,i){ return s + (i.qty||1); }, 0);
+    state.orderHistory.unshift({
+      id: String(state._orderCount).padStart(3,'0'),
+      store: '古镇曹二市场店',
+      dineType: state.dineType || '堂食',
+      date: dateStr,
+      status: '已完成',
+      items: JSON.parse(JSON.stringify(state.menuCart)),
+      total: total,
+      count: count
+    });
+    if (state.orderHistory.length > 50) state.orderHistory.length = 50;
+  }
+  var orderItems = JSON.parse(JSON.stringify(state.menuCart));
+  state.menuCart = [];
+  updateMenuCart();
+  document.querySelectorAll('.menu-card.selected').forEach(function(c) {
+    c.classList.remove('selected');
+    var id = c.dataset.id;
+    var img = c.querySelector('img');
+    menuData.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        if (item.id === id && item.img) img.src = item.img;
+      });
+    });
+  });
+  closeCartPanel();
+  hideConfirmPage();
+  // Show loading animation before game
+  var overlay = document.getElementById('loadingOverlay');
+  var gif = overlay ? overlay.querySelector('.loading-gif') : null;
+  var text = overlay ? overlay.querySelector('.loading-text') : null;
+  if (gif) gif.src = 'dino-assets/小猪奔跑.gif';
+  if (text) text.textContent = '订单支付成功！';
+  if (overlay) overlay.classList.add('show');
+  // Render game page underneath
+  showWaitingPage(orderItems);
+  setTimeout(function() {
+    if (overlay) overlay.classList.add('fade-out');
+    setTimeout(function() {
+      if (overlay) { overlay.classList.remove('show'); overlay.classList.remove('fade-out'); }
+    }, 400);
+  }, 1400);
+}
+
+function renderConfirmPage() {
+  var body = document.getElementById('confirmBody');
+  if (!body) return;
+
+  var items = state.menuCart.length > 0 ? state.menuCart : [];
+  var total = items.reduce(function(s, i) { return s + i.price * (i.qty || 1); }, 0);
+  if (_confirmDineType === '外带') total += 1;
+
+  var html = '';
+
+  // Dine/takeout toggle
+  var dineImg = _confirmDineType === '堂食' ? '确认订单/堂食选择后.webp?v=2' : '确认订单/堂食选择前.webp?v=2';
+  var takeoutImg = _confirmDineType === '外带' ? '确认订单/外带选择后.webp?v=2' : '确认订单/外带选择前.webp?v=2';
+  html += '<div class="confirm-dine-toggle">';
+  html += '<div class="confirm-dine-option" onclick="confirmToggleDine(\'堂食\')"><img src="'+dineImg+'" alt="堂食"></div>';
+  html += '<div class="confirm-dine-option" onclick="confirmToggleDine(\'外带\')"><img src="'+takeoutImg+'" alt="外带"></div>';
+  html += '</div>';
+
+  // Pickup time
+  html += '<div class="confirm-section">';
+  html += '<div class="confirm-pickup">';
+  html += '<span class="confirm-pickup-label">取餐时间</span>';
+  html += '<span class="confirm-pickup-value"><span>现在取餐</span></span>';
+  html += '</div></div>';
+
+  // Order items
+  if (items.length > 0) {
+    html += '<div class="confirm-section">';
+    html += '<div class="confirm-section-header"><span class="confirm-section-title">餐品详情</span></div>';
+    html += '<div class="confirm-order-divider" style="margin-top:12px;"></div>';
+    items.forEach(function(item) {
+      var qty = item.qty || 1;
+      var specs = getConfirmItemSpecs(item);
+      html += '<div class="confirm-order-item">';
+      html += '<div class="confirm-order-item-img"><img src="'+getCartImg(item.name)+'" alt=""></div>';
+      html += '<div class="confirm-order-item-info">';
+      html += '<div class="confirm-order-item-name">'+item.name+'</div>';
+      if (specs) html += '<div class="confirm-order-item-specs">'+specs+'</div>';
+      html += '</div>';
+      html += '<div class="confirm-order-item-right">';
+      html += '<div class="confirm-order-item-price">¥'+Number(item.price).toFixed(1)+'</div>';
+      html += '<div class="confirm-order-item-qty">x'+qty+'</div>';
+      html += '</div></div>';
+    });
+    if (_confirmDineType === '外带') {
+      html += '<div class="confirm-takeout-row"><span>外带</span><span>+¥1.0</span></div>';
+    }
+    html += '<div class="confirm-order-divider"></div>';
+    html += '<div class="confirm-order-subtotal">';
+    html += '<span class="confirm-order-subtotal-label">餐品小计</span>';
+    html += '<span class="confirm-order-subtotal-price">¥'+Number(total).toFixed(1)+'</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+
+  // Recommended add-ons
+  html += '<div class="confirm-section">';
+  html += '<div class="confirm-section-header"><span class="confirm-section-title">推荐加餐</span></div>';
+  html += '<div class="confirm-addons">';
+  confirmAddons.forEach(function(a) {
+    var qty = state.menuCart.filter(function(item) { return item.id === a.id; }).length;
+    html += '<div class="confirm-addon-card">';
+    html += '<img class="addon-hero" src="'+a.img+'" alt="'+a.name+'">';
+    html += '<div class="addon-ctrl">';
+    html += '<svg class="addon-minus'+(qty>0?' show':'')+'" onclick="event.stopPropagation();confirmRemoveAddon(\''+a.id+'\')" viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#CA2626" stroke-width="1.33"/><line x1="4" y1="8" x2="12" y2="8" stroke="#CA2626" stroke-width="2" stroke-linecap="round"/></svg>';
+    html += '<span class="addon-qty'+(qty>0?' show':'')+'">'+qty+'</span>';
+    html += '<svg class="addon-plus" onclick="event.stopPropagation();confirmAddItem(\''+a.id+'\')" viewBox="0 0 16 16" width="16" height="16"><circle cx="8" cy="8" r="6.5" fill="#CA2626" stroke="#CA2626" stroke-width="1.33"/><line x1="8" y1="4" x2="8" y2="12" stroke="white" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="8" x2="12" y2="8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div></div>';
+
+  // Coupon
+  html += '<div class="confirm-section">';
+  html += '<div class="confirm-section-header compact"><span class="confirm-section-title small">优惠券</span></div>';
+  html += '<div class="confirm-row">';
+  html += '<span class="confirm-row-value sub">无可用优惠卷</span>';
+  html += '</div>';
+  html += '<div class="confirm-divider"></div>';
+  html += '<div class="confirm-row">';
+  html += '<span class="confirm-row-label">应付</span>';
+  html += '<span class="confirm-row-value price">¥'+Number(total).toFixed(1)+'</span>';
+  html += '</div>';
+  html += '<div class="confirm-divider"></div>';
+  html += '<div class="confirm-row">';
+  html += '<span class="confirm-row-label">实付</span>';
+  html += '<span class="confirm-row-value price" style="color:#CA2626;">¥'+Number(total).toFixed(1)+'</span>';
+  html += '</div></div>';
+
+  // Payment method
+  html += '<div class="confirm-section">';
+  html += '<div class="confirm-payment">';
+  html += '<span class="confirm-payment-label">支付方式</span>';
+  html += '<div class="confirm-payment-right">';
+  html += '<span class="confirm-payment-icon"><img src="确认订单/微信支付图标.webp" alt=""></span>';
+  html += '<span class="confirm-payment-text">微信支付</span>';
+  html += '<svg class="confirm-arrow" viewBox="0 0 12 12" width="12" height="12"><path d="M4 2l4 4-4 4" stroke="#C4C4C4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  html += '</div>';
+  html += '</div></div>';
+
+  // Notes
+  html += '<div class="confirm-section">';
+  html += '<div class="confirm-notes">';
+  html += '<span class="confirm-notes-label">备注特殊要求</span>';
+  html += '<svg class="confirm-arrow" viewBox="0 0 12 12" width="12" height="12"><path d="M4 2l4 4-4 4" stroke="#C4C4C4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  html += '</div></div>';
+
+  body.innerHTML = html;
+  document.getElementById('confirmTotal').textContent = '合计 ¥'+Number(total).toFixed(1);
+}
+
+function confirmToggleDine(type) {
+  _confirmDineType = type;
+  state.dineType = type;
+  updateMenuCart();
+  renderConfirmPage();
+}
+
+function confirmAddItem(addonId) {
+  var a = confirmAddons.find(function(x) { return x.id === addonId; });
+  if (!a) return;
+  state.menuCart.push({
+    id: addonId,
+    name: a.name,
+    price: a.price,
+    qty: 1
+  });
+  updateMenuCart();
+  var page = document.getElementById('page-confirm');
+  var st = page.scrollTop;
+  renderConfirmPage();
+  page.scrollTop = st;
+}
+
+function confirmRemoveAddon(addonId) {
+  for (var i = state.menuCart.length - 1; i >= 0; i--) {
+    if (state.menuCart[i].id === addonId) {
+      state.menuCart.splice(i, 1);
+      break;
+    }
+  }
+  updateMenuCart();
+  var page = document.getElementById('page-confirm');
+  var st = page.scrollTop;
+  renderConfirmPage();
+  page.scrollTop = st;
+}
+
+function getConfirmItemSpecs(item) {
+  return '不加料/中份/微辣';
+}
+
+// Update goCheckout to navigate to confirm page
+
+init();
+
+// Menu body scroll → sync sidebar position + scroll-spy
+(function() {
+  const menuBody = document.querySelector('.menu-body');
+  if (menuBody) {
+    menuBody.addEventListener('scroll', function() {
+      const sidebar = document.getElementById('categorySidebar');
+      if (!sidebar) return;
+      const newTop = Math.max(100, 424 - this.scrollTop);
+      sidebar.style.top = newTop + 'px';
+
+      // Scroll-spy: auto-highlight active category
+      if (state._manualCatSelect) return;
+      const sections = document.querySelectorAll('.menu-category');
+      let activeCat = null;
+      sections.forEach(sec => {
+        const header = sec.querySelector('.menu-cat-header');
+        if (header) {
+          const rect = header.getBoundingClientRect();
+          if (rect.top <= 120) activeCat = sec.dataset.category;
+        }
+      });
+      if (activeCat) setActiveCategory(activeCat);
+    });
+  }
+})();
+
+// ===== Pig Runner Waiting Game =====
+(function(){
+var cv = document.getElementById('dino-game-cv'), ctx = cv.getContext('2d');
+var bcv = document.getElementById('dino-bg-cv'), bctx = bcv.getContext('2d');
+var DPR = Math.min(window.devicePixelRatio || 1, 2);
+cv.width = 402 * DPR; cv.height = 874 * DPR; cv.style.width = '402px'; cv.style.height = '874px';
+ctx.scale(DPR, DPR);
+var ld = document.getElementById('dino-loading');
+var pge = document.getElementById('dino-pig-run'), pte = document.getElementById('dino-pot-s');
+var scr = document.getElementById('dino-scroll'), sinner = document.getElementById('dino-scroll-inner');
+var sbtn = document.getElementById('dino-start-dom');
+var rbtn = document.getElementById('dino-replay-dom');
+var ebtn = document.getElementById('dino-end-dom');
+var obtn = document.getElementById('dino-over-btns');
+var bovl = document.getElementById('dino-brown-overlay');
+var container = document.getElementById('page-waiting');
+
+var W = 402, H = 874, GY = 820, PX = 80;
+var GR = 0.65, JV = -13, IS = 5, MS = 14, IF = 80;
+var ST = {LOADING:0, IDLE:1, PLAY:2, OVER:3, EMPTY:4}; var gs = ST.LOADING;
+var SCR_Y = 94;
+
+var IMG = {};
+var P = {
+  pigStand:'dino-assets/猪的原始状态.webp', pigRun:'dino-assets/小猪奔跑.gif',
+  pigJump:'dino-assets/小猪跳跃.webp', mountain:'dino-assets/山.webp',
+  bg:'dino-assets/等待界面/背景.webp', onion:'dino-assets/葱的原始状态.webp',
+  garlic:'dino-assets/蒜的原始状态.webp', radish:'dino-assets/萝卜的原始状态.webp',
+  pot:'dino-assets/锅.gif', gameOver:'dino-assets/游戏结束.webp',
+  heartF:'dino-assets/有命的爱心.webp', heartE:'dino-assets/没命的爱心.webp',
+  waitBg:'dino-assets/等待界面/等待界面.webp', backBtn:'dino-assets/等待界面/返回键.webp',
+  miniBtn:'dino-assets/等待界面/小程序按钮.webp', dineIcon:'dino-assets/等待界面/堂食标志.webp',
+  dineAddr:'dino-assets/等待界面/堂食地址.webp', statusBg:'dino-assets/等待界面/制作中状态条背景.webp',
+  pigStir:'dino-assets/等待界面/小猪搅拌面条.gif', menuImg:'dino-assets/等待界面/菜单.webp',
+  scoreLabel:'dino-assets/分数：.webp', recordLabel:'dino-assets/记录：.webp',
+  rankBtn:'dino-assets/排行榜单.webp', doneStatus:'dino-assets/等待界面/制作完成状态条.webp',
+  orderTitle:'dino-assets/等待界面/确认订单.webp'
+};
+var startImg = new Image(); startImg.src = 'dino-assets/开始游戏键.webp';
+
+var pig, obs, pot, score, lives, spd, fc, nObs, inv, mtn, best, otm;
+try { best = parseInt(localStorage.getItem('pigRunBest') || '0'); } catch(e) {}
+var O = [{k:'onion',w:38,h:56},{k:'garlic',w:42,h:40},{k:'radish',w:45,h:46}];
+
+function load(){
+  var ps = Object.entries(P).map(function(e){ var k=e[0],s=e[1]; return new Promise(function(r){ var i=new Image(); i.onload=function(){ IMG[k]=i; r(); }; i.onerror=function(){ console.warn(s); r(); }; i.src=s; }); });
+  return Promise.all(ps.concat([new Promise(function(r){ if (startImg.complete) r(); else { startImg.onload=r; startImg.onerror=r; } })]));
+}
+
+function rst(){
+  pig = {x:PX, y:GY-55, vy:0, jumping:false, w:80, h:55}; obs = []; pot = {x:-150, w:110, h:118};
+  score = 0; lives = 2; spd = IS; fc = 0; nObs = 80; inv = 0; mtn = 0; otm = 0;
+  mtnOffset = 0; mtnTargetY = 0; uiCurrY = GY-140; uiTargetY = GY-140; ovlCurrH = 300; ovlTargetH = 300; gyOffset = 0; gyTargetY = 0;
+  _rankY = -300; _rankVy = 0; _rankBounce = 0; _rankDone = true;
+}
+function jp(){ if (!pig.jumping) { pig.vy = JV; pig.jumping = true; } }
+function spw(){ var t = O[Math.floor(Math.random()*3)]; obs.push({k:t.k, x:W, y:GY-t.h, w:t.w, h:t.h}); }
+
+function upd(){
+  if (gs === ST.IDLE || gs === ST.PLAY) { var t = pig.x-100; pot.x += (t-pot.x)*0.08; }
+  if (gs === ST.OVER) {
+    otm++;
+    if (otm === 20) { _rankY = -350; _rankVy = 0; _rankBounce = 0; _rankDone = false; }
+    if (otm > 20 && !_rankDone) {
+      var rankTarget = uiCurrY + 90 + 24 + 26;
+      _rankVy += 3; _rankY += _rankVy;
+      if (_rankY >= rankTarget) {
+        _rankY = rankTarget; _rankBounce++;
+        if (_rankBounce >= 3) { _rankDone = true; }
+        else { _rankVy = -_rankVy * (0.55 / _rankBounce); }
+      }
+    }
+    if (otm === 21) { obtn.style.display = 'flex'; sbtn.style.display = 'none'; } return;
+  }
+  if (gs !== ST.PLAY) return;
+  fc++; var ts = IS + Math.floor(score/250)*0.6; spd += (Math.min(ts, MS)-spd)*0.05;
+  pig.vy += GR; pig.y += pig.vy; if (pig.y >= GY-pig.h) { pig.y = GY-pig.h; pig.vy = 0; pig.jumping = false; }
+  if (fc >= nObs) { spw(); var mn = Math.max(50, 120-Math.floor(spd*4)), mx = Math.max(80, 180-Math.floor(spd*4)); nObs = fc+mn+Math.floor(Math.random()*(mx-mn)); }
+  for (var i = obs.length-1; i >= 0; i--) { obs[i].x -= spd; if (obs[i].x+obs[i].w < 0) { obs.splice(i,1); continue; } if (pot.x+pot.w > obs[i].x && pot.x < obs[i].x+obs[i].w) { obs.splice(i,1); } }
+  mtn -= spd*0.3; var mw = 729*(100/152); if (mtn <= -mw) mtn += mw;
+  if (inv > 0) inv--;
+  if (inv === 0) { var ph = {x:pig.x+10, y:pig.y+8, w:pig.w-20, h:pig.h-12}; for (var j = obs.length-1; j >= 0; j--) { var o = obs[j], oh = {x:o.x+4, y:o.y+4, w:o.w-8, h:o.h-8}; if (ph.x < oh.x+oh.w && ph.x+ph.w > oh.x && ph.y < oh.y+oh.h && ph.y+ph.h > oh.y) { lives--; inv = IF; obs.splice(j,1); if (lives <= 0) { gs = ST.OVER; return; } } } }
+  score += spd*0.5;
+}
+
+function upPig(){
+  if (gs === ST.EMPTY) { pge.style.display = 'none'; return; }
+  if (gs === ST.IDLE) { pge.style.display = ''; pge.src = P.pigStand; pge.style.left = '36px'; pge.style.top = '754px'; pge.style.width = '55px'; pge.style.height = '39px'; return; }
+  var showRun = gs === ST.PLAY && !pig.jumping && !(inv>0 && Math.floor(inv/5)%2===0);
+  if (showRun) { pge.style.display = ''; if (pge.getAttribute('d') !== P.pigRun) { pge.src = P.pigRun; pge.setAttribute('d', P.pigRun); } pge.style.left = pig.x+'px'; pge.style.top = (GY-59+gyOffset)+'px'; pge.style.width = '85px'; pge.style.height = '59px'; }
+  else { pge.style.display = 'none'; }
+}
+function upPot(){
+  if (gs === ST.OVER || gs === ST.EMPTY) { pte.style.display = 'none'; return; } pte.style.display = '';
+  if (gs === ST.IDLE) { pte.src = 'dino-assets/锅的原始状态.webp'; pte.style.left = '12px'; pte.style.top = '752px'; pte.style.width = '85px'; pte.style.height = '93px'; pte.style.transform = ''; }
+  else { pte.src = P.pot; pte.style.left = pot.x+'px'; pte.style.top = (GY-pot.h+10+gyOffset)+'px'; pte.style.width = pot.w+'px'; pte.style.height = pot.h+'px'; pte.style.transform = ''; }
+}
+
+function dBg(){
+  if (IMG.bg) bctx.drawImage(IMG.bg, 0, 0, W, H);
+  else { var g = bctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#F4E9E6'); g.addColorStop(0.6,'#ECDCC0'); g.addColorStop(1,'#D4A574'); bctx.fillStyle = g; bctx.fillRect(0,0,W,H); }
+}
+function dHeader(){
+  bctx.textAlign = 'left';
+}
+function dOver(){
+  var curY = uiCurrY, cy = Math.round(curY);
+  if (IMG.gameOver) { var gh = 80, gw = gh*(IMG.gameOver.width/IMG.gameOver.height); ctx.drawImage(IMG.gameOver, W/2-gw/2, cy-10, gw, gh); }
+  var ds = Math.floor(score/10); if (ds > best) { best = ds; try { localStorage.setItem('pigRunBest', ds); } catch(e) {} }
+  var lx = W/2-70, ly = cy+90;
+  if (IMG.scoreLabel) { var sh = 14, sw = sh*(IMG.scoreLabel.width/IMG.scoreLabel.height); ctx.drawImage(IMG.scoreLabel, lx, ly, sw, sh); ctx.fillStyle = '#CA2626'; ctx.font = 'bold 15px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.textAlign = 'left'; ctx.fillText(ds, lx+sw+64, ly+12); }
+  var ly2 = ly+24;
+  if (IMG.recordLabel) { var rh = 14, rw = rh*(IMG.recordLabel.width/IMG.recordLabel.height); ctx.drawImage(IMG.recordLabel, lx, ly2, rw, rh); ctx.fillStyle = '#CA2626'; ctx.font = 'bold 15px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.textAlign = 'left'; ctx.fillText(best, lx+rw+64, ly2+12); }
+  if (IMG.rankBtn) { var rankY = !_rankDone ? _rankY : (ly2+26); ctx.drawImage(IMG.rankBtn, W/2-IMG.rankBtn.width/4, rankY, IMG.rankBtn.width/2, IMG.rankBtn.height/2); }
+  ctx.textAlign = 'left';
+}
+
+var ovlTargetH = 300, ovlCurrH = 300;
+var uiTargetY = GY-140, uiCurrY = GY-140;
+var mtnTargetY = 0, mtnOffset = 0;
+var gyOffset = 0, gyTargetY = 0;
+var _rankY = -300, _rankVy = 0, _rankBounce = 0, _rankDone = true;
+
+function dMtn(){ if (!IMG.mountain) return; var h = 100, w = 729*(h/152), y = GY-pot.h+110-h; y += mtnOffset; ctx.drawImage(IMG.mountain, mtn, y, w, h); ctx.drawImage(IMG.mountain, mtn+w, y, w, h); }
+function dObs(){ for (var i=0;i<obs.length;i++){ var o=obs[i], im=IMG[o.k]; if(!im) continue; ctx.save(); ctx.translate(o.x+o.w/2, o.y+o.h/2+gyOffset); ctx.rotate(Math.sin(o.x*0.05)*0.08); ctx.drawImage(im, -o.w/2, -o.h/2, o.w, o.h); ctx.restore(); } }
+function dPig(){ if (inv>0 && Math.floor(inv/5)%2===0) return; if (!pig.jumping && gs===ST.PLAY) return; if (gs===ST.IDLE) return; var im, iw, ih, ix, iy; if (pig.jumping && IMG.pigJump) { im=IMG.pigJump; iw=100; ih=100; ix=pig.x-10; iy=GY-ih+(pig.y-(GY-pig.h))*0.8+gyOffset; } else if (IMG.pigStand) { im=IMG.pigStand; iw=80; ih=55; ix=pig.x; iy=pig.y+gyOffset; } else return; ctx.drawImage(im, ix, iy, iw, ih); }
+function dUI(){
+  var curY = uiCurrY; curY += (uiTargetY-curY)*0.08; uiCurrY = curY;
+  var yy = Math.round(curY); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(12, yy, 140, 44);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 20px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.textAlign = 'left'; ctx.fillText('分数 '+Math.floor(score/10), 22, yy+30);
+  var hs = 36, hy = yy+6, hx0 = W-15-hs*2-8;
+  for (var i = 0; i < 2; i++) { var hx = hx0+i*(hs+6), hi = i<lives ? IMG.heartF : IMG.heartE; if (hi) ctx.drawImage(hi, hx, hy, hs, hs); else { ctx.fillStyle = i<lives ? '#FF4444' : '#666'; ctx.beginPath(); ctx.arc(hx+hs/2, hy+hs/2, hs/2-2, 0, Math.PI*2); ctx.fill(); } }
+}
+function drawBg(){ bctx.clearRect(0,0,W,H); dBg(); dHeader(); }
+function drawGame(){ ctx.clearRect(0,0,W,H); if (gs===ST.EMPTY) return; dMtn(); if (gs===ST.IDLE||gs===ST.PLAY||gs===ST.OVER) dPig(); if (gs===ST.PLAY) { dObs(); dUI(); } if (gs===ST.OVER) dObs(); if (gs===ST.OVER&&otm>20) dOver(); }
+function draw(){ drawBg(); drawGame(); }
+
+function setupDOM(){
+  var sbh = IMG.statusBg ? Math.round(325*(IMG.statusBg.height/IMG.statusBg.width)) : 84;
+  var sbDw = 325, sbDh = sbh;
+  var h = '';
+  h += '<div style="position:relative;width:402px;height:'+sbDh+'px">';
+  h += '<img src="'+P.statusBg+'" style="position:absolute;left:36px;top:0;width:'+sbDw+'px;height:'+sbDh+'px">';
+  h += '<img src="'+P.pigStir+'" style="position:absolute;left:'+(36+325/2-50)+'px;top:'+(sbDh/2-60)+'px;width:100px;height:100px">';
+  h += '</div>';
+  h += '<div style="height:25px;"></div>';
+  // Render ordered items
+  var items = window._dinoOrderItems || [];
+  if (items.length > 0) {
+    h += '<div style="width:368px;margin:0 auto;background:#fff;border-radius:12px;padding:16px 16px 12px">';
+    h += '<div style="font-size:14px;font-weight:400;color:#000;margin-bottom:12px">订单详情</div>';
+    items.forEach(function(it){
+      var img = typeof getCartImg === 'function' ? getCartImg(it.name) : ('购物车菜品/'+it.name+'（购物车）.webp');
+      h += '<div style="display:flex;align-items:center;margin-bottom:10px;gap:10px">';
+      h += '<img src="'+img+'" style="width:48px;height:48px;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">';
+      h += '<span style="flex:1;font-size:13px;color:#333">'+it.name+'</span>';
+      h += '<span style="font-size:13px;color:#999;margin-right:4px">¥'+(it.price||0)+' ×'+(it.qty||1)+'</span>';
+      h += '<span style="font-size:14px;font-weight:600;color:#CA2626">¥'+Number(it.price*(it.qty||1)).toFixed(1)+'</span>';
+      h += '</div>';
+    });
+    var total = items.reduce(function(s,i){ return s+i.price*(i.qty||1); },0);
+    h += '<div style="border-top:1px solid #eee;padding-top:10px;display:flex;justify-content:space-between;font-size:14px">';
+    h += '<span style="color:#666">合计</span><span style="font-weight:700;color:#CA2626">¥'+Number(total).toFixed(1)+'</span>';
+    h += '</div></div>';
+  }
+  h += '<div style="height:300px;"></div>';
+  sinner.innerHTML = h;
+  scr.style.top = SCR_Y+'px';
+  scr.style.height = (H-SCR_Y)+'px';
+  sbtn.style.left = ((W-141)/2)+'px'; sbtn.style.top = '710px'; sbtn.style.width = '141px'; sbtn.style.height = '46px'; sbtn.style.display = 'block';
+  scr._statusImg = scr.querySelector('img');
+}
+function endGame(){ resetToIdle(); }
+
+sbtn.addEventListener('click', function(e){ e.stopPropagation(); if (gs===ST.IDLE) start(); });
+sbtn.addEventListener('touchstart', function(e){ e.stopPropagation(); e.preventDefault(); if (gs===ST.IDLE) start(); });
+rbtn.addEventListener('click', function(e){ e.stopPropagation(); if (gs===ST.OVER&&otm>20) start(); });
+rbtn.addEventListener('touchstart', function(e){ e.stopPropagation(); e.preventDefault(); if (gs===ST.OVER&&otm>20) start(); });
+ebtn.addEventListener('click', function(e){ e.stopPropagation(); resetToIdle(); });
+ebtn.addEventListener('touchstart', function(e){ e.stopPropagation(); e.preventDefault(); resetToIdle(); });
+
+function handleGI(e){
+  if (e.target.closest('#dino-start-dom') || e.target.closest('#dino-replay-dom') || e.target.closest('#dino-end-dom')) return;
+  if (gs === ST.PLAY) jp();
+  else if (gs === ST.OVER && otm > 20) start();
+}
+container.addEventListener('click', handleGI);
+container.addEventListener('touchstart', function(e){ if (e.target.closest('#dino-start-dom')||e.target.closest('#dino-replay-dom')) return; e.preventDefault(); handleGI(e); }, {passive:false});
+container.addEventListener('touchmove', function(e){ if (e.target.closest('#dino-scroll')) return; e.preventDefault(); }, {passive:false});
+document.addEventListener('keydown', function(e){ if (e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') { e.preventDefault(); if (gs===ST.IDLE) start(); else if (gs===ST.OVER&&otm>20) start(); else jp(); } });
+
+function start(){ rst(); gs = ST.PLAY; sbtn.style.display = 'none'; obtn.style.display = 'none'; bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = ''; ovlTargetH = H; uiTargetY = GY-640; mtnTargetY = -200; gyTargetY = -50;
+  if (scr._statusImg) scr._statusImg.src = P.statusBg;
+  var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
+  document.getElementById('navBar').style.display = 'none'; container.style.zIndex = '300';
+  var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.remove('show');
+}
+function resetToIdle(){ rst(); gs = ST.EMPTY; sbtn.style.display = 'none'; obtn.style.display = 'none'; ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0; bovl.style.display = 'none'; cv.style.display = 'none'; pte.style.display = 'none'; pge.style.display = 'none';
+  if (scr._statusImg && P.doneStatus) scr._statusImg.src = P.doneStatus;
+  var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = 'none';
+  document.getElementById('navBar').style.display = ''; container.style.zIndex = '100';
+  var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.add('show');
+}
+function loop(){ if (container.classList.contains('show')) { upd(); upPig(); upPot();
+  ovlCurrH += (ovlTargetH-ovlCurrH)*0.08; bovl.style.height = Math.round(ovlCurrH)+'px';
+  mtnOffset += (mtnTargetY-mtnOffset)*0.08;
+  gyOffset += (gyTargetY-gyOffset)*0.08;
+  draw(); } requestAnimationFrame(loop); }
+
+
+window._dinoGameReady = false;
+window._dinoOrderItems = [];
+window.showWaitingPage = function(items){
+  window._dinoOrderItems = items || [];
+  document.getElementById('page-waiting').classList.add('show');
+  document.getElementById('navBar').style.display = 'none';
+  container.style.zIndex = '300';
+  var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.remove('show');
+  if (!window._dinoGameReady) {
+    window._dinoGameReady = true;
+    load().then(function(){
+      ld.style.display = 'none';
+      rst(); gs = ST.IDLE;
+      setupDOM();
+      requestAnimationFrame(loop);
+    });
+  } else {
+    setupDOM();
+    rst(); gs = ST.IDLE;
+    sbtn.style.display = 'block'; obtn.style.display = 'none';
+    bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = '';
+    ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0;
+    ovlCurrH = 300; uiCurrY = GY-140; mtnOffset = 0; gyOffset = 0;
+    if (scr._statusImg && P.statusBg) scr._statusImg.src = P.statusBg;
+    var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
+  }
+};
+window.hideWaitingPage = function(){
+  document.getElementById('page-waiting').classList.remove('show');
+  container.style.zIndex = '300';
+  var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.remove('show');
+  switchTab('订单');
+  var orderPage = document.getElementById('page-order');
+  if (orderPage) orderPage.scrollTop = 0;
+};
+})();
+</script>
+
+</body>
+</html>

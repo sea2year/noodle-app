@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=402, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>小猪跑酷</title>
+<!-- 预加载关键素材，让浏览器提前开始下载 -->
+<link rel="preload" as="image" href="dino-assets/猪的原始状态.webp">
+<link rel="preload" as="image" href="dino-assets/小猪奔跑.gif">
+<link rel="preload" as="image" href="dino-assets/小猪跳跃.webp">
+<link rel="preload" as="image" href="dino-assets/山.webp">
+<link rel="preload" as="image" href="dino-assets/葱的原始状态.webp">
+<link rel="preload" as="image" href="dino-assets/蒜的原始状态.webp">
+<link rel="preload" as="image" href="dino-assets/萝卜的原始状态.webp">
+<link rel="preload" as="image" href="dino-assets/锅.gif">
+<link rel="preload" as="image" href="dino-assets/开始游戏键.webp">
+<link rel="preload" as="image" href="dino-assets/有命的爱心.webp">
+<link rel="preload" as="image" href="dino-assets/没命的爱心.webp">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; overflow-x:hidden; -webkit-tap-highlight-color:transparent; }
+body {
+  background:#333;
+  display:flex; justify-content:center; align-items:flex-start;
+  min-height:100vh;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+}
+.app {
+  width:402px; height:874px;
+  position:relative; overflow:hidden;
+  background:#87CEEB;
+  flex-shrink:0;
+  user-select:none; -webkit-user-select:none;
+}
+canvas { display:block; width:402px; height:874px; position:relative; z-index:1; }
+.loading {
+  position:absolute; left:0; top:0; width:100%; height:100%;
+  display:flex; justify-content:center; align-items:center;
+  color:#fff; font-size:20px; z-index:20;
+  background:rgba(0,0,0,0.5);
+}
+/* DOM sprite layers - between canvas and UI overlay */
+.sprite {
+  position:absolute; pointer-events:none; z-index:2;
+  image-rendering: auto;
+}
+#pot-sprite { z-index:3; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <canvas id="game" width="402" height="874"></canvas>
+  <img class="sprite" id="pig-run-sprite" src="" alt="">
+  <img class="sprite" id="pot-sprite" src="" alt="">
+  <div class="loading" id="loading">加载中...</div>
+</div>
+<script>
+(function() {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const app = document.getElementById('app');
+  const loadingEl = document.getElementById('loading');
+  const pigRunEl = document.getElementById('pig-run-sprite');
+  const potEl = document.getElementById('pot-sprite');
+
+  const CANVAS_W = 402;
+  const CANVAS_H = 874;
+  const GROUND_Y = 720;
+  const PIG_X = 80;
+  const GRAVITY = 0.65;
+  const JUMP_VEL = -13;
+  const INITIAL_SPEED = 5;
+  const MAX_SPEED = 14;
+  const INVINCIBLE_MS = 1300;
+
+  const STATE = { LOADING:'loading', IDLE:'idle', PLAYING:'playing', GAME_OVER:'gameOver' };
+  let gameState = STATE.LOADING;
+
+  // Delta-time tracking for frame-rate independence
+  let lastTime = 0;
+
+  const img = {};
+  // 关键素材——进入待机画面就需要的
+  const criticalAssets = {
+    pigStand: 'dino-assets/猪的原始状态.webp',
+    pigRun: 'dino-assets/小猪奔跑.gif',
+    pigJump: 'dino-assets/小猪跳跃.webp',
+    mountain: 'dino-assets/山.webp',
+    onion: 'dino-assets/葱的原始状态.webp',
+    garlic: 'dino-assets/蒜的原始状态.webp',
+    radish: 'dino-assets/萝卜的原始状态.webp',
+    pot: 'dino-assets/锅.gif',
+    startBtn: 'dino-assets/开始游戏键.webp',
+    heartFull: 'dino-assets/有命的爱心.webp',
+    heartEmpty: 'dino-assets/没命的爱心.webp',
+  };
+  // 非关键素材——游戏结束后才需要，可以延迟加载
+  const GAME_OVER_SRC = 'dino-assets/游戏结束.webp';
+  let gameOverLoaded = false;
+
+  let pig, obstacles, pot, score, lives, speed;
+  let nextObstacleMs, invincibleRemaining, mountainOffset, groundOffset;
+  let bestScore = 0;
+  let gameOverTimer = 0;
+  let dtFactor = 1;
+  try { bestScore = parseInt(localStorage.getItem('pigRunBest')||'0'); } catch(e) {}
+
+  const OBSTACLE_TYPES = [
+    { key:'onion', width:38, height:56 },
+    { key:'garlic', width:42, height:40 },
+    { key:'radish', width:45, height:46 },
+  ];
+
+  function loadImages() {
+    const entries = Object.entries(criticalAssets);
+    const total = entries.length;
+    let loaded = 0;
+    const promises = entries.map(([key, src]) => {
+      return new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => {
+          img[key] = image;
+          loaded++;
+          loadingEl.textContent = `加载中... ${Math.round(loaded/total*100)}%`;
+          resolve();
+        };
+        image.onerror = () => { loaded++; resolve(); };
+        image.src = src;
+      });
+    });
+    return Promise.all(promises);
+  }
+
+  // 延迟加载游戏结束画面（只在需要时才加载）
+  function preloadGameOver() {
+    if (gameOverLoaded || img.gameOverImg) return;
+    const go = new Image();
+    go.onload = () => { img.gameOverImg = go; gameOverLoaded = true; };
+    go.src = GAME_OVER_SRC;
+  }
+
+  function reset() {
+    pig = {
+      x: PIG_X,
+      y: GROUND_Y - 55,
+      vy: 0,
+      jumping: false,
+      width: 80,
+      height: 55,
+    };
+    obstacles = [];
+    pot = { x: -150, width: 110, height: 118 };
+    score = 0;
+    lives = 2;
+    speed = INITIAL_SPEED;
+    nextObstacleMs = 1300;
+    invincibleRemaining = 0;
+    mountainOffset = 0;
+    groundOffset = 0;
+    gameOverTimer = 0;
+    lastTime = 0;
+  }
+
+  function jump() {
+    if (!pig.jumping) {
+      pig.vy = JUMP_VEL;
+      pig.jumping = true;
+    }
+  }
+
+  function spawnObstacle() {
+    const type = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+    obstacles.push({
+      key: type.key,
+      x: CANVAS_W,
+      y: GROUND_Y - type.height,
+      width: type.width,
+      height: type.height,
+    });
+  }
+
+  function update(dt) {
+    // dt in ms, capped to avoid spiral-of-death on tab resume
+    const capped = Math.min(dt, 50);
+    dtFactor = capped / 16.667; // normalize to 60fps
+
+    // Pot follows pig (lerp is frame-rate independent via pow)
+    if (gameState === STATE.IDLE || gameState === STATE.PLAYING) {
+      const targetX = pig.x - 100;
+      const t = 1 - Math.pow(1 - 0.08, dtFactor);
+      pot.x += (targetX - pot.x) * t;
+    }
+
+    if (gameState === STATE.GAME_OVER) {
+      gameOverTimer += dt;
+      const t = 1 - Math.pow(1 - 0.12, dtFactor);
+      pot.x += (pig.x + 10 - pot.x) * t;
+      return;
+    }
+
+    if (gameState !== STATE.PLAYING) return;
+
+    // Speed ramp
+    const targetSpeed = INITIAL_SPEED + Math.floor(score / 250) * 0.6;
+    speed += (Math.min(targetSpeed, MAX_SPEED) - speed) * 0.05 * dtFactor;
+
+    // Pig physics
+    pig.vy += GRAVITY * dtFactor;
+    pig.y += pig.vy * dtFactor;
+    if (pig.y >= GROUND_Y - pig.height) {
+      pig.y = GROUND_Y - pig.height;
+      pig.vy = 0;
+      pig.jumping = false;
+    }
+
+    // Spawn obstacles (time-based)
+    nextObstacleMs -= dt;
+    if (nextObstacleMs <= 0) {
+      spawnObstacle();
+      const minGap = Math.max(800, 2000 - speed * 70);
+      const maxGap = Math.max(1300, 3000 - speed * 70);
+      nextObstacleMs = minGap + Math.random() * (maxGap - minGap);
+    }
+
+    // Move obstacles
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      obstacles[i].x -= speed * dtFactor;
+      if (obstacles[i].x + obstacles[i].width < 0) { obstacles.splice(i, 1); continue; }
+      if (pot.x + pot.width > obstacles[i].x && pot.x < obstacles[i].x + obstacles[i].width) {
+        obstacles.splice(i, 1);
+      }
+    }
+
+    // Parallax
+    mountainOffset -= speed * 0.3 * dtFactor;
+    groundOffset += speed * 0.3 * dtFactor;
+    const mtnW = 729 * (150 / 152);
+    if (mountainOffset <= -mtnW) mountainOffset += mtnW;
+
+    // Invincibility
+    if (invincibleRemaining > 0) invincibleRemaining -= dt;
+
+    if (invincibleRemaining <= 0) {
+      const ph = { x: pig.x + 10, y: pig.y + 8, w: pig.width - 20, h: pig.height - 12 };
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const o = obstacles[i];
+        const oh = { x: o.x + 4, y: o.y + 4, w: o.width - 8, h: o.height - 8 };
+        if (ph.x < oh.x + oh.w && ph.x + ph.w > oh.x && ph.y < oh.y + oh.h && ph.y + ph.h > oh.y) {
+          lives--;
+          invincibleRemaining = INVINCIBLE_MS;
+          obstacles.splice(i, 1);
+          if (lives <= 0) { gameState = STATE.GAME_OVER; return; }
+        }
+      }
+    }
+
+    score += speed * 0.5 * dtFactor;
+  }
+
+  // ---- DOM sprite positioning ----
+
+  function updatePigSprite() {
+    const blink = invincibleRemaining > 0 && Math.floor(invincibleRemaining / 100) % 2 === 0;
+    const showRunGif = gameState === STATE.PLAYING && !pig.jumping && !blink;
+
+    if (showRunGif) {
+      pigRunEl.style.display = '';
+      if (pigRunEl.getAttribute('data-src') !== criticalAssets.pigRun) {
+        pigRunEl.src = criticalAssets.pigRun;
+        pigRunEl.setAttribute('data-src', criticalAssets.pigRun);
+      }
+      pigRunEl.style.left = pig.x + 'px';
+      pigRunEl.style.top = (GROUND_Y - 59) + 'px';
+      pigRunEl.style.width = '85px';
+      pigRunEl.style.height = '59px';
+    } else {
+      pigRunEl.style.display = 'none';
+    }
+  }
+
+  function updatePotSprite() {
+    const potY = GROUND_Y - pot.height + 10;
+    potEl.src = criticalAssets.pot;
+    potEl.style.left = pot.x + 'px';
+    potEl.style.top = potY + 'px';
+    potEl.style.width = pot.width + 'px';
+    potEl.style.height = pot.height + 'px';
+
+    if (gameState === STATE.GAME_OVER) {
+      const shakeX = Math.sin(Date.now() * 0.05) * 3;
+      potEl.style.transform = `translate(${shakeX}px, ${Math.cos(Date.now()*0.05)*2}px)`;
+    } else {
+      potEl.style.transform = '';
+    }
+  }
+
+  // ---- Canvas drawing ----
+
+  function drawSky() {
+    const grad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+    grad.addColorStop(0, '#87CEEB');
+    grad.addColorStop(0.6, '#B5E3F5');
+    grad.addColorStop(1, '#D4E8D0');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CANVAS_W, GROUND_Y);
+  }
+
+  function drawMountain() {
+    if (!img.mountain) return;
+    const mtnH = 150;
+    const mtnW = 729 * (mtnH / 152);
+    const mtnY = 430;
+    ctx.drawImage(img.mountain, mountainOffset, mtnY, mtnW, mtnH);
+    ctx.drawImage(img.mountain, mountainOffset + mtnW, mtnY, mtnW, mtnH);
+  }
+
+  function drawGround() {
+    ctx.fillStyle = '#7EC850';
+    ctx.fillRect(0, GROUND_Y, CANVAS_W, 10);
+    ctx.fillStyle = '#8B6B4D';
+    ctx.fillRect(0, GROUND_Y + 10, CANVAS_W, CANVAS_H - GROUND_Y - 10);
+    const off = groundOffset % 40;
+    ctx.strokeStyle = '#7A5C3E';
+    ctx.lineWidth = 1;
+    for (let i = -40; i < CANVAS_W + 40; i += 40) {
+      ctx.beginPath();
+      ctx.moveTo(i - off, GROUND_Y + 18);
+      ctx.lineTo(i - off + 22, GROUND_Y + 18);
+      ctx.stroke();
+    }
+  }
+
+  function drawObstacles() {
+    for (const obs of obstacles) {
+      const obsImg = img[obs.key];
+      if (!obsImg) continue;
+      ctx.save();
+      ctx.translate(obs.x + obs.width/2, obs.y + obs.height/2);
+      ctx.rotate(Math.sin(obs.x * 0.05) * 0.08);
+      ctx.drawImage(obsImg, -obs.width/2, -obs.height/2, obs.width, obs.height);
+      ctx.restore();
+    }
+  }
+
+  function drawPigOnCanvas() {
+    // Only used for non-GIF pig states: standing (idle/gameover) and jumping (PNG)
+    if (invincibleRemaining > 0 && Math.floor(invincibleRemaining / 100) % 2 === 0) return;
+    if (!pig.jumping && gameState === STATE.PLAYING) return; // GIF handles running
+
+    let drawImg, drawW, drawH, drawX, drawY;
+    if (pig.jumping && img.pigJump) {
+      drawImg = img.pigJump;
+      drawW = 100; drawH = 100;
+      drawX = pig.x - 10;
+      drawY = GROUND_Y - drawH + (pig.y - (GROUND_Y - pig.height)) * 0.8;
+    } else if (img.pigStand) {
+      drawImg = img.pigStand;
+      drawW = pig.width; drawH = pig.height;
+      drawX = pig.x; drawY = pig.y;
+    } else {
+      return;
+    }
+    ctx.drawImage(drawImg, drawX, drawY, drawW, drawH);
+  }
+
+  function drawUI() {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    roundedRect(12, 10, 120, 40, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 20px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`分数 ${Math.floor(score / 10)}`, 22, 38);
+
+    const hs = 32, hy = 14, hx0 = CANVAS_W - 15 - hs * 2 - 8;
+    for (let i = 0; i < 2; i++) {
+      const hx = hx0 + i * (hs + 6);
+      const heartImg = i < lives ? img.heartFull : img.heartEmpty;
+      if (heartImg) {
+        ctx.drawImage(heartImg, hx, hy, hs, hs);
+      } else {
+        ctx.fillStyle = i < lives ? '#FF4444' : '#666';
+        ctx.beginPath();
+        ctx.arc(hx + hs/2, hy + hs/2, hs/2 - 2, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function roundedRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y);
+    ctx.arcTo(x+w, y, x+w, y+r, r);
+    ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+    ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+    ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+    ctx.closePath();
+  }
+
+  function drawIdleScreen() {
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 38px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('小猪跑酷', CANVAS_W/2, 280);
+    ctx.font = '15px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillStyle = '#555';
+    ctx.fillText('小猪快跑！锅要追上来了！', CANVAS_W/2, 315);
+
+    if (img.startBtn) {
+      ctx.drawImage(img.startBtn, (CANVAS_W-210)/2, 350, 210, 68);
+    } else {
+      const bx = (CANVAS_W-180)/2, by = 360;
+      ctx.fillStyle = '#FF6B35';
+      roundedRect(bx, by, 180, 55, 28);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 20px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillText('开始游戏', CANVAS_W/2, by+37);
+    }
+    ctx.fillStyle = '#777';
+    ctx.font = '13px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillText('空格 / ↑ 或点击屏幕跳跃', CANVAS_W/2, 455);
+    ctx.textAlign = 'left';
+  }
+
+  function drawGameOverScreen() {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // 确保游戏结束图已加载
+    preloadGameOver();
+    if (img.gameOverImg) {
+      const goW = 280, goH = goW * (1764/820);
+      ctx.drawImage(img.gameOverImg, (CANVAS_W-goW)/2, 120, goW, goH);
+    }
+
+    const ds = Math.floor(score / 10);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 30px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`最终得分: ${ds}`, CANVAS_W/2, 600);
+
+    if (ds > bestScore) {
+      bestScore = ds;
+      try { localStorage.setItem('pigRunBest', ds); } catch(e) {}
+      ctx.fillStyle = '#FFD700';
+      ctx.font = 'bold 18px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillText('新纪录!', CANVAS_W/2, 630);
+    } else if (bestScore > 0) {
+      ctx.fillStyle = '#ccc';
+      ctx.font = '16px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillText(`最高纪录: ${bestScore}`, CANVAS_W/2, 630);
+    }
+
+    const alpha = 0.5 + Math.sin(Date.now()*0.004)*0.5;
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+    ctx.font = '17px "PingFang SC","Microsoft YaHei",sans-serif';
+    ctx.fillText('点击屏幕重新开始', CANVAS_W/2, 670);
+    ctx.textAlign = 'left';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    drawSky();
+    drawMountain();
+    drawGround();
+    drawObstacles();
+    drawPigOnCanvas();
+    drawUI();
+
+    if (gameState === STATE.IDLE) drawIdleScreen();
+    if (gameState === STATE.GAME_OVER && gameOverTimer > 800) drawGameOverScreen();
+  }
+
+  function loop(now) {
+    const dt = lastTime ? now - lastTime : 16.667;
+    lastTime = now;
+    update(dt);
+    updatePigSprite();
+    updatePotSprite();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function startGame() {
+    reset();
+    gameState = STATE.PLAYING;
+  }
+
+  function handleInput(e) {
+    const isKey = e.type === 'keydown';
+    const isSpace = isKey && (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW');
+    if (isKey && !isSpace) return;
+    if (isKey) e.preventDefault();
+
+    if (gameState === STATE.IDLE) { startGame(); return; }
+    if (gameState === STATE.GAME_OVER) { if (gameOverTimer > 800) startGame(); return; }
+    jump();
+  }
+
+  async function init() {
+    await loadImages();
+    loadingEl.style.display = 'none';
+    reset();
+    gameState = STATE.IDLE;
+    requestAnimationFrame(loop);
+    // 关键素材加载完毕后，后台预加载游戏结束画面
+    preloadGameOver();
+  }
+
+  document.addEventListener('keydown', handleInput);
+  app.addEventListener('click', handleInput);
+  app.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    handleInput(e);
+  }, { passive: false });
+  app.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+  init();
+})();
+</script>
+</body>
+</html>
