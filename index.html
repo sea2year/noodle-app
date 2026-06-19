@@ -1887,7 +1887,7 @@ html.webp .confirm-top {
 
   <!-- Loading overlay (outside app-content) -->
   <div class="loading-overlay" id="loadingOverlay">
-    <img class="loading-gif" src="dino-assets/等待界面/小猪搅拌面条.gif" alt="">
+    <video class="loading-gif" autoplay loop muted playsinline src="dino-assets/等待界面/小猪搅拌面条.mp4"></video>
     <span class="loading-text">正在准备美味...</span>
   </div>
 
@@ -2422,7 +2422,7 @@ function goCheckout() {
   var overlay = document.getElementById('loadingOverlay');
   var gif = overlay ? overlay.querySelector('.loading-gif') : null;
   var text = overlay ? overlay.querySelector('.loading-text') : null;
-  if (gif) gif.src = '小猪入锅.gif';
+  if (gif) gif.src = '小猪入锅.mp4';
   if (text) text.textContent = '正在烹饪美味...';
   if (overlay) overlay.classList.add('show');
   // Render confirm page underneath the loading overlay
@@ -3393,7 +3393,7 @@ function switchTab(name) {
     var overlay = document.getElementById('loadingOverlay');
     var gif = overlay ? overlay.querySelector('.loading-gif') : null;
     var text = overlay ? overlay.querySelector('.loading-text') : null;
-    if (gif) gif.src = 'dino-assets/等待界面/小猪搅拌面条.gif';
+    if (gif) gif.src = 'dino-assets/等待界面/小猪搅拌面条.mp4';
     if (text) text.textContent = '正在准备美味...';
     if (overlay) overlay.classList.add('show');
     doSwitchTab(name);
@@ -3923,8 +3923,8 @@ function collectAllAssetUrls() {
     add('dino-assets/锅的原始状态.webp');
 
     // 13. Loading overlay GIFs (dynamically set via .src)
-    add('小猪入锅.gif');
-    add('dino-assets/等待界面/小猪搅拌面条.gif');
+    add('小猪入锅.mp4');
+    add('dino-assets/等待界面/小猪搅拌面条.mp4');
 
     // 14. Price floating UI
     add('价格浮窗/碗.webp');
@@ -4170,7 +4170,7 @@ function confirmPay() {
   var overlay = document.getElementById('loadingOverlay');
   var gif = overlay ? overlay.querySelector('.loading-gif') : null;
   var text = overlay ? overlay.querySelector('.loading-text') : null;
-  if (gif) gif.src = 'dino-assets/小猪奔跑.gif';
+  if (gif) gif.src = 'dino-assets/小猪奔跑.mp4';
   if (text) text.textContent = '订单支付成功！';
   if (overlay) overlay.classList.add('show');
   // Render game page underneath
