@@ -1515,10 +1515,7 @@ html.webp .confirm-top {
 #loadingPage.done {
   display:none;
 }
-.loading-brand {
-  width:200px; height:auto;
-  margin-bottom:40px;
-}
+
 .loading-bar-track {
   width:280px; height:6px;
   background:rgba(255,255,255,0.15);
@@ -1593,7 +1590,7 @@ html.webp .confirm-top {
 <div class="app">
   <!-- Loading Page -->
   <div id="loadingPage">
-    <img class="loading-brand" src="导航栏/首页 点击.webp" alt="">
+
     <div class="loading-bar-track">
       <div class="loading-bar-fill" id="loadingBarFill"></div>
     </div>
@@ -1887,7 +1884,7 @@ html.webp .confirm-top {
 
   <!-- Loading overlay (outside app-content) -->
   <div class="loading-overlay" id="loadingOverlay">
-    <video class="loading-gif" autoplay loop muted playsinline src="dino-assets/等待界面/小猪搅拌面条.mp4"></video>
+    <video class="loading-gif" autoplay loop muted playsinline src="dino-assets/等待界面/小猪搅拌面条-m.mp4"></video>
     <span class="loading-text">正在准备美味...</span>
   </div>
 
@@ -1901,8 +1898,10 @@ html.webp .confirm-top {
     <canvas id="dino-game-cv" width="402" height="874"></canvas>
     <div id="dino-scroll"><div id="dino-scroll-inner"></div></div>
     <div id="dino-brown-overlay"></div>
-    <img class="dino-sprite" id="dino-pig-run" src="" alt="">
-    <img class="dino-sprite" id="dino-pot-s" src="" alt="">
+    <video class="dino-sprite" id="dino-pig-run" autoplay loop muted playsinline src=""></video>
+    <img class="dino-sprite" id="dino-pig-idle" src="" alt="">
+    <video class="dino-sprite" id="dino-pot-s" autoplay loop muted playsinline src=""></video>
+    <img class="dino-sprite" id="dino-pot-idle" src="" alt="">
     <img id="dino-start-dom" src="dino-assets/开始游戏键.webp" alt="开始游戏">
     <div id="dino-over-btns" style="display:none;">
       <div id="dino-end-dom" style="height:46px;line-height:46px;padding:0 28px;background:#fff;border-radius:23px;font-size:20px;font-weight:700;color:#CA2626;cursor:pointer;display:inline-flex;align-items:center">结束游戏</div>
@@ -3393,7 +3392,7 @@ function switchTab(name) {
     var overlay = document.getElementById('loadingOverlay');
     var gif = overlay ? overlay.querySelector('.loading-gif') : null;
     var text = overlay ? overlay.querySelector('.loading-text') : null;
-    if (gif) gif.src = 'dino-assets/等待界面/小猪搅拌面条.mp4';
+    if (gif) gif.src = 'dino-assets/等待界面/小猪搅拌面条-m.mp4';
     if (text) text.textContent = '正在准备美味...';
     if (overlay) overlay.classList.add('show');
     doSwitchTab(name);
@@ -3924,7 +3923,7 @@ function collectAllAssetUrls() {
 
     // 13. Loading overlay GIFs (dynamically set via .src)
     add('小猪入锅.mp4');
-    add('dino-assets/等待界面/小猪搅拌面条.mp4');
+    add('dino-assets/等待界面/小猪搅拌面条-m.mp4');
 
     // 14. Price floating UI
     add('价格浮窗/碗.webp');
@@ -4170,7 +4169,7 @@ function confirmPay() {
   var overlay = document.getElementById('loadingOverlay');
   var gif = overlay ? overlay.querySelector('.loading-gif') : null;
   var text = overlay ? overlay.querySelector('.loading-text') : null;
-  if (gif) gif.src = 'dino-assets/小猪奔跑.mp4';
+  if (gif) gif.src = 'dino-assets/小猪奔跑-m.mp4';
   if (text) text.textContent = '订单支付成功！';
   if (overlay) overlay.classList.add('show');
   // Render game page underneath
@@ -4295,10 +4294,50 @@ function renderConfirmPage() {
 }
 
 function confirmToggleDine(type) {
+  if (_confirmDineType === type) return;
   _confirmDineType = type;
   state.dineType = type;
   updateMenuCart();
-  renderConfirmPage();
+
+  var body = document.getElementById('confirmBody');
+  if (!body) return;
+
+  // Directly swap button images — no animation
+  var dineImg = body.querySelector('.confirm-dine-option img[alt="堂食"]');
+  var takeoutImg = body.querySelector('.confirm-dine-option img[alt="外带"]');
+  if (dineImg) dineImg.src = type === '堂食' ? '确认订单/堂食选择后.webp?v=2' : '确认订单/堂食选择前.webp?v=2';
+  if (takeoutImg) takeoutImg.src = type === '外带' ? '确认订单/外带选择后.webp?v=2' : '确认订单/外带选择前.webp?v=2';
+
+  // Recalculate total
+  var items = state.menuCart.length > 0 ? state.menuCart : [];
+  var total = items.reduce(function(s, i) { return s + i.price * (i.qty || 1); }, 0);
+  if (type === '外带') total += 1;
+
+  // Show/hide 外带 row
+  var takeoutRow = body.querySelector('.confirm-takeout-row');
+  if (type === '外带') {
+    if (!takeoutRow) {
+      var divider = body.querySelector('.confirm-order-divider');
+      if (divider && divider.parentNode) {
+        var row = document.createElement('div');
+        row.className = 'confirm-takeout-row';
+        row.innerHTML = '<span>外带</span><span>+¥1.0</span>';
+        divider.parentNode.insertBefore(row, divider);
+      }
+    }
+  } else {
+    if (takeoutRow && takeoutRow.parentNode) takeoutRow.parentNode.removeChild(takeoutRow);
+  }
+
+  // Update price displays
+  var subtotalEl = body.querySelector('.confirm-order-subtotal-price');
+  if (subtotalEl) subtotalEl.textContent = '¥' + Number(total).toFixed(1);
+  var priceEls = body.querySelectorAll('.confirm-row-value.price');
+  for (var i = 0; i < priceEls.length; i++) {
+    priceEls[i].textContent = '¥' + Number(total).toFixed(1);
+  }
+  var confirmTotal = document.getElementById('confirmTotal');
+  if (confirmTotal) confirmTotal.textContent = '合计 ¥' + Number(total).toFixed(1);
 }
 
 function confirmAddItem(addonId) {
@@ -4373,11 +4412,12 @@ var DPR = Math.min(window.devicePixelRatio || 1, 2);
 cv.width = 402 * DPR; cv.height = 874 * DPR; cv.style.width = '402px'; cv.style.height = '874px';
 ctx.scale(DPR, DPR);
 var ld = document.getElementById('dino-loading');
-var pge = document.getElementById('dino-pig-run'), pte = document.getElementById('dino-pot-s');
+var pge = document.getElementById('dino-pig-run'), pgeIdle = document.getElementById('dino-pig-idle'), pte = document.getElementById('dino-pot-s'), pteIdle = document.getElementById('dino-pot-idle');
 var scr = document.getElementById('dino-scroll'), sinner = document.getElementById('dino-scroll-inner');
 var sbtn = document.getElementById('dino-start-dom');
 var rbtn = document.getElementById('dino-replay-dom');
 var ebtn = document.getElementById('dino-end-dom');
+var backBtn = document.querySelector('.waiting-back-btn');
 var obtn = document.getElementById('dino-over-btns');
 var bovl = document.getElementById('dino-brown-overlay');
 var container = document.getElementById('page-waiting');
@@ -4389,16 +4429,16 @@ var SCR_Y = 94;
 
 var IMG = {};
 var P = {
-  pigStand:'dino-assets/猪的原始状态.webp', pigRun:'dino-assets/小猪奔跑.gif',
+  pigStand:'dino-assets/猪的原始状态.webp', pigRun:'dino-assets/小猪奔跑-m.mp4',
   pigJump:'dino-assets/小猪跳跃.webp', mountain:'dino-assets/山.webp',
   bg:'dino-assets/等待界面/背景.webp', onion:'dino-assets/葱的原始状态.webp',
   garlic:'dino-assets/蒜的原始状态.webp', radish:'dino-assets/萝卜的原始状态.webp',
-  pot:'dino-assets/锅.gif', gameOver:'dino-assets/游戏结束.webp',
+  pot:'dino-assets/锅-m.mp4', gameOver:'dino-assets/游戏结束.webp',
   heartF:'dino-assets/有命的爱心.webp', heartE:'dino-assets/没命的爱心.webp',
   waitBg:'dino-assets/等待界面/等待界面.webp', backBtn:'dino-assets/等待界面/返回键.webp',
   miniBtn:'dino-assets/等待界面/小程序按钮.webp', dineIcon:'dino-assets/等待界面/堂食标志.webp',
   dineAddr:'dino-assets/等待界面/堂食地址.webp', statusBg:'dino-assets/等待界面/制作中状态条背景.webp',
-  pigStir:'dino-assets/等待界面/小猪搅拌面条.gif', menuImg:'dino-assets/等待界面/菜单.webp',
+  pigStir:'dino-assets/等待界面/小猪搅拌面条-m.mp4', menuImg:'dino-assets/等待界面/菜单.webp',
   scoreLabel:'dino-assets/分数：.webp', recordLabel:'dino-assets/记录：.webp',
   rankBtn:'dino-assets/排行榜单.webp', doneStatus:'dino-assets/等待界面/制作完成状态条.webp',
   orderTitle:'dino-assets/等待界面/确认订单.webp'
@@ -4410,7 +4450,7 @@ try { best = parseInt(localStorage.getItem('pigRunBest') || '0'); } catch(e) {}
 var O = [{k:'onion',w:38,h:56},{k:'garlic',w:42,h:40},{k:'radish',w:45,h:46}];
 
 function load(){
-  var ps = Object.entries(P).map(function(e){ var k=e[0],s=e[1]; return new Promise(function(r){ var i=new Image(); i.onload=function(){ IMG[k]=i; r(); }; i.onerror=function(){ console.warn(s); r(); }; i.src=s; }); });
+  var ps = Object.entries(P).filter(function(e){ return !/\.mp4$/.test(e[1]); }).map(function(e){ var k=e[0],s=e[1]; return new Promise(function(r){ var i=new Image(); i.onload=function(){ IMG[k]=i; r(); }; i.onerror=function(){ console.warn(s); r(); }; i.src=s; }); });
   return Promise.all(ps.concat([new Promise(function(r){ if (startImg.complete) r(); else { startImg.onload=r; startImg.onerror=r; } })]));
 }
 
@@ -4451,16 +4491,31 @@ function upd(){
 }
 
 function upPig(){
-  if (gs === ST.EMPTY) { pge.style.display = 'none'; return; }
-  if (gs === ST.IDLE) { pge.style.display = ''; pge.src = P.pigStand; pge.style.left = '36px'; pge.style.top = '754px'; pge.style.width = '55px'; pge.style.height = '39px'; return; }
+  if (gs === ST.EMPTY) { pge.style.display = 'none'; pgeIdle.style.display = 'none'; return; }
+  if (gs === ST.IDLE) {
+    pge.style.display = 'none';
+    pgeIdle.style.display = ''; pgeIdle.src = P.pigStand;
+    pgeIdle.style.left = '36px'; pgeIdle.style.top = '754px'; pgeIdle.style.width = '55px'; pgeIdle.style.height = '39px';
+    return;
+  }
+  pgeIdle.style.display = 'none';
   var showRun = gs === ST.PLAY && !pig.jumping && !(inv>0 && Math.floor(inv/5)%2===0);
-  if (showRun) { pge.style.display = ''; if (pge.getAttribute('d') !== P.pigRun) { pge.src = P.pigRun; pge.setAttribute('d', P.pigRun); } pge.style.left = pig.x+'px'; pge.style.top = (GY-59+gyOffset)+'px'; pge.style.width = '85px'; pge.style.height = '59px'; }
+  if (showRun) { pge.style.display = ''; if (pge.getAttribute('d') !== P.pigRun) { pge.src = P.pigRun; pge.setAttribute('d', P.pigRun); } pge.style.left = pig.x+'px'; pge.style.top = (GY-59+gyOffset)+'px'; pge.style.width = '85px'; pge.style.height = '59px'; if (pge.paused) pge.play(); }
   else { pge.style.display = 'none'; }
 }
 function upPot(){
-  if (gs === ST.OVER || gs === ST.EMPTY) { pte.style.display = 'none'; return; } pte.style.display = '';
-  if (gs === ST.IDLE) { pte.src = 'dino-assets/锅的原始状态.webp'; pte.style.left = '12px'; pte.style.top = '752px'; pte.style.width = '85px'; pte.style.height = '93px'; pte.style.transform = ''; }
-  else { pte.src = P.pot; pte.style.left = pot.x+'px'; pte.style.top = (GY-pot.h+10+gyOffset)+'px'; pte.style.width = pot.w+'px'; pte.style.height = pot.h+'px'; pte.style.transform = ''; }
+  if (gs === ST.OVER || gs === ST.EMPTY) { pte.style.display = 'none'; pteIdle.style.display = 'none'; return; }
+  if (gs === ST.IDLE) {
+    pte.style.display = 'none';
+    pteIdle.style.display = ''; pteIdle.src = 'dino-assets/锅的原始状态.webp';
+    pteIdle.style.left = '12px'; pteIdle.style.top = '752px'; pteIdle.style.width = '85px'; pteIdle.style.height = '93px'; pteIdle.style.transform = '';
+    return;
+  }
+  pteIdle.style.display = 'none';
+  pte.style.display = '';
+  if (pte.getAttribute('d') !== P.pot) { pte.src = P.pot; pte.setAttribute('d', P.pot); }
+  pte.style.left = pot.x+'px'; pte.style.top = (GY-pot.h+10+gyOffset)+'px'; pte.style.width = pot.w+'px'; pte.style.height = pot.h+'px'; pte.style.transform = '';
+  if (pte.paused) pte.play();
 }
 
 function dBg(){
@@ -4508,7 +4563,7 @@ function setupDOM(){
   var h = '';
   h += '<div style="position:relative;width:402px;height:'+sbDh+'px">';
   h += '<img src="'+P.statusBg+'" style="position:absolute;left:36px;top:0;width:'+sbDw+'px;height:'+sbDh+'px">';
-  h += '<img src="'+P.pigStir+'" style="position:absolute;left:'+(36+325/2-50)+'px;top:'+(sbDh/2-60)+'px;width:100px;height:100px">';
+  h += '<video autoplay loop muted playsinline src="'+P.pigStir+'" style="position:absolute;left:'+(36+325/2-50)+'px;top:'+(sbDh/2-60)+'px;width:100px;height:100px"></video>';
   h += '</div>';
   h += '<div style="height:25px;"></div>';
   // Render ordered items
@@ -4545,24 +4600,25 @@ rbtn.addEventListener('click', function(e){ e.stopPropagation(); if (gs===ST.OVE
 rbtn.addEventListener('touchstart', function(e){ e.stopPropagation(); e.preventDefault(); if (gs===ST.OVER&&otm>20) start(); });
 ebtn.addEventListener('click', function(e){ e.stopPropagation(); resetToIdle(); });
 ebtn.addEventListener('touchstart', function(e){ e.stopPropagation(); e.preventDefault(); resetToIdle(); });
+if (backBtn) backBtn.addEventListener('touchstart', function(e){ e.stopPropagation(); e.preventDefault(); hideWaitingPage(); });
 
 function handleGI(e){
-  if (e.target.closest('#dino-start-dom') || e.target.closest('#dino-replay-dom') || e.target.closest('#dino-end-dom')) return;
+  if (e.target.closest('#dino-start-dom') || e.target.closest('#dino-replay-dom') || e.target.closest('#dino-end-dom') || e.target.closest('.waiting-back-btn')) return;
   if (gs === ST.PLAY) jp();
   else if (gs === ST.OVER && otm > 20) start();
 }
 container.addEventListener('click', handleGI);
-container.addEventListener('touchstart', function(e){ if (e.target.closest('#dino-start-dom')||e.target.closest('#dino-replay-dom')) return; e.preventDefault(); handleGI(e); }, {passive:false});
+container.addEventListener('touchstart', function(e){ if (e.target.closest('#dino-start-dom')||e.target.closest('#dino-replay-dom')||e.target.closest('.waiting-back-btn')) return; e.preventDefault(); handleGI(e); }, {passive:false});
 container.addEventListener('touchmove', function(e){ if (e.target.closest('#dino-scroll')) return; e.preventDefault(); }, {passive:false});
 document.addEventListener('keydown', function(e){ if (e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') { e.preventDefault(); if (gs===ST.IDLE) start(); else if (gs===ST.OVER&&otm>20) start(); else jp(); } });
 
-function start(){ rst(); gs = ST.PLAY; sbtn.style.display = 'none'; obtn.style.display = 'none'; bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = ''; ovlTargetH = H; uiTargetY = GY-640; mtnTargetY = -200; gyTargetY = -50;
+function start(){ rst(); gs = ST.PLAY; sbtn.style.display = 'none'; obtn.style.display = 'none'; bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = ''; pgeIdle.style.display = 'none'; pteIdle.style.display = 'none'; ovlTargetH = H; uiTargetY = GY-640; mtnTargetY = -200; gyTargetY = -50;
   if (scr._statusImg) scr._statusImg.src = P.statusBg;
   var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
   document.getElementById('navBar').style.display = 'none'; container.style.zIndex = '300';
   var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.remove('show');
 }
-function resetToIdle(){ rst(); gs = ST.EMPTY; sbtn.style.display = 'none'; obtn.style.display = 'none'; ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0; bovl.style.display = 'none'; cv.style.display = 'none'; pte.style.display = 'none'; pge.style.display = 'none';
+function resetToIdle(){ rst(); gs = ST.EMPTY; sbtn.style.display = 'none'; obtn.style.display = 'none'; ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0; bovl.style.display = 'none'; cv.style.display = 'none'; pte.style.display = 'none'; pge.style.display = 'none'; pgeIdle.style.display = 'none'; pteIdle.style.display = 'none';
   if (scr._statusImg && P.doneStatus) scr._statusImg.src = P.doneStatus;
   var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = 'none';
   document.getElementById('navBar').style.display = ''; container.style.zIndex = '100';
