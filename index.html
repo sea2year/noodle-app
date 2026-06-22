@@ -972,20 +972,39 @@ html.webp .confirm-top {
   z-index:10;
 }
 .waiting-top {
-  width:402px; height:210px;
-  position:absolute; top:0; z-index:10;
-  background:linear-gradient(to bottom, #CA2626 0%, #CA2626 70%, rgba(202,38,38,0.85) 85%, rgba(202,38,38,0) 100%);
+  width:402px; height:492px;
+  position:absolute; top:0; z-index:4;
+  background:linear-gradient(to bottom, #CA2626 0%, #CA2626 36%, #DED4C8 100%);
+  pointer-events:none;
 }
 .waiting-back-btn {
-  position:absolute; left:16px; top:48px;
+  position:absolute; left:16px; top:54px;
   width:34px; height:34px; cursor:pointer; z-index:10;
+  pointer-events:auto;
 }
 .waiting-top-title {
-  position:absolute; left:50%; top:51px;
+  position:absolute; left:50%; top:57px;
   transform:translateX(-50%);
   font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
   font-size:20px; font-weight:500; color:#fff;
   z-index:10;
+}
+.waiting-hero-img {
+  position:absolute; left:-8px; top:10px;
+  width:412px; height:412px; object-fit:contain;
+  z-index:5; pointer-events:none;
+}
+.waiting-store-info {
+  position:absolute; left:62px; top:102px;
+  display:flex; align-items:center; gap:6px;
+  z-index:10; pointer-events:none;
+}
+.waiting-store-info img {
+  width:20px; height:20px;
+}
+.waiting-store-info span {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:16px; font-weight:400; color:#fff;
 }
 .confirm-body {
   padding:0 15px 100px;
@@ -1591,7 +1610,7 @@ html.webp .confirm-top {
   background:rgba(0,0,0,0.5);
 }
 #dino-scroll {
-  position:absolute; z-index:2;
+  position:absolute; z-index:5;
   overflow-y:auto; overflow-x:hidden;
   pointer-events:none;
   -webkit-overflow-scrolling:touch; scrollbar-width:none;
@@ -1601,11 +1620,21 @@ html.webp .confirm-top {
 #dino-scroll-inner { position:relative; width:402px; }
 #dino-brown-overlay {
   position:absolute; left:0; bottom:0; width:100%; height:300px; z-index:3;
-  background:linear-gradient(to bottom, transparent 0%, #EFD4B5 100px, #EFD4B5 100%);
+  background:linear-gradient(to bottom, transparent 0%, #EFD4B5 80px, #EFD4B5 60%, #F5EDE4 85%, #FFFFFF 100%);
   pointer-events:none;
 }
 .dino-sprite { position:absolute; pointer-events:none; z-index:5; image-rendering:auto; }
-#dino-start-dom { position:absolute; z-index:6; pointer-events:auto; cursor:pointer; }
+#dino-start-dom {
+  position:absolute; z-index:6; pointer-events:auto; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  background:#CA2626; border:1px solid #E3C9A1; border-radius:54px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation; -webkit-user-select:none; user-select:none;
+}
+#dino-start-dom span {
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  font-size:20px; font-weight:500; color:#fff;
+}
 #dino-over-btns {
   display:none; position:absolute; z-index:6; left:0; top:710px;
   width:100%; justify-content:center; align-items:center; gap:12px;
@@ -1836,7 +1865,7 @@ html.webp .confirm-top {
   <!-- Detail page overlay -->
   <div id="page-detail">
     <div class="detail-hero">
-      <img id="detailImg" src="" alt="">
+      <img id="detailImg" alt="">
       <img class="detail-back-btn" src="返回.webp" alt="" onclick="hideDetailPage()">
     </div>
     <div class="detail-scroll" id="detailScroll">
@@ -1912,25 +1941,29 @@ html.webp .confirm-top {
 
   <!-- Loading overlay (outside app-content) -->
   <div class="loading-overlay" id="loadingOverlay">
-    <img class="loading-gif" src="小猪搅拌面条_nobg.gif" alt="">
+    <img class="loading-gif" src="小猪搅拌面条_nobg_opt.gif" alt="">
     <span class="loading-text">正在准备美味...</span>
   </div>
 
   <!-- Pig Runner Waiting Game (outside app-content, z:300) -->
   <div id="page-waiting">
-    <div class="waiting-top">
-      <img class="waiting-back-btn" src="返回.webp" alt="" onclick="hideWaitingPage()">
-      <span class="waiting-top-title"></span>
+    <div class="waiting-top"></div>
+    <img class="waiting-hero-img" id="waiting-hero" alt="">
+    <div class="waiting-store-info">
+      <img src="dino-assets/等待界面/堂食图标.webp" alt="">
+      <span>古镇曹二市场店</span>
     </div>
+    <img class="waiting-back-btn" src="dino-assets/等待界面/返回键.webp" alt="" onclick="hideWaitingPage()">
+    <span class="waiting-top-title"></span>
     <canvas id="dino-bg-cv" width="402" height="874"></canvas>
     <canvas id="dino-game-cv" width="402" height="874"></canvas>
     <div id="dino-scroll"><div id="dino-scroll-inner"></div></div>
     <div id="dino-brown-overlay"></div>
-    <img class="dino-sprite" id="dino-pig-run" src="" alt="">
-    <img class="dino-sprite" id="dino-pig-idle" src="" alt="">
-    <img class="dino-sprite" id="dino-pot-s" src="" alt="">
-    <img class="dino-sprite" id="dino-pot-idle" src="" alt="">
-    <img id="dino-start-dom" src="dino-assets/开始游戏键.webp" alt="开始游戏">
+    <img class="dino-sprite" id="dino-pig-run" alt="">
+    <img class="dino-sprite" id="dino-pig-idle" alt="">
+    <img class="dino-sprite" id="dino-pot-s" alt="">
+    <img class="dino-sprite" id="dino-pot-idle" alt="">
+    <div id="dino-start-dom"><span>开始游戏</span></div>
     <div id="dino-over-btns" style="display:none;">
       <div id="dino-end-dom" style="height:46px;line-height:46px;padding:0 28px;background:#fff;border-radius:23px;font-size:20px;font-weight:700;color:#CA2626;cursor:pointer;display:inline-flex;align-items:center">结束游戏</div>
       <img id="dino-replay-dom" src="dino-assets/重玩键.webp" alt="重玩" style="height:46px;cursor:pointer">
@@ -1958,14 +1991,8 @@ if (supportsWebP) {
     get: _srcDesc.get,
     set: function(v) { _srcDesc.set.call(this, typeof v === 'string' ? wsrc(v) : v); }
   });
-  // Re-set src on already-parsed images
-  setTimeout(function(){
-    document.querySelectorAll('img').forEach(function(img){
-      if (/\.(png|jpg|jpeg)$/i.test(img.getAttribute('src')||'')) {
-        img.setAttribute('src', wsrc(img.getAttribute('src')));
-      }
-    });
-  }, 0);
+// Image src auto-conversion handled by prototype patch above
+
   document.documentElement.classList.add('webp');
 }
 
@@ -2457,7 +2484,7 @@ function goCheckout() {
   var overlay = document.getElementById('loadingOverlay');
   var gif = overlay ? overlay.querySelector('.loading-gif') : null;
   var text = overlay ? overlay.querySelector('.loading-text') : null;
-  if (gif) gif.src = '小猪入锅.gif';
+  if (gif) gif.src = '小猪入锅_opt.gif';
   if (text) text.textContent = '正在烹饪美味...';
   if (overlay) overlay.classList.add('show');
   // Delay confirm page until overlay is visible
@@ -3437,7 +3464,7 @@ function switchTab(name) {
     var overlay = document.getElementById('loadingOverlay');
     var gif = overlay ? overlay.querySelector('.loading-gif') : null;
     var text = overlay ? overlay.querySelector('.loading-text') : null;
-    if (gif) gif.src = '小猪搅拌面条_nobg.gif';
+    if (gif) gif.src = '小猪搅拌面条_nobg_opt.gif';
     if (text) text.textContent = '正在准备美味...';
     if (overlay) overlay.classList.add('show');
     // Delay page switch until overlay is visible
@@ -3875,7 +3902,7 @@ function collectAllAssetUrls() {
   function add(u) { if (u) urls.add(u); }
   try {
     // 1. Static DOM images
-    document.querySelectorAll('img[src]').forEach(function(el) { add(el.src); });
+    document.querySelectorAll('img[src]').forEach(function(el) { var s = el.getAttribute('src'); if (!s || s.trim() === '') return; add(el.src); });
     document.querySelectorAll('picture source[srcset]').forEach(function(el) { add(el.srcset); });
 
     // 2. Noodle × spice combinations
@@ -3964,15 +3991,14 @@ function collectAllAssetUrls() {
 
     // 12. Dino game assets
     if (typeof P !== 'undefined') Object.values(P).forEach(function(v) { add(v); });
-    add('dino-assets/开始游戏键.webp');
     add('dino-assets/重玩键.webp');
     add('dino-assets/锅的原始状态.webp');
 
     // 13. Loading overlay GIFs
-    add('小猪搅拌面条_nobg.gif');
-    add('小猪入锅.gif');
-    add('dino-assets/小猪奔跑.gif');
-    add('dino-assets/锅.gif');
+    add('小猪搅拌面条_nobg_opt.gif');
+    add('小猪入锅_opt.gif');
+    add('dino-assets/小猪奔跑_opt.gif');
+    add('dino-assets/锅_opt.gif');
 
     // 14. Price floating UI
     add('价格浮窗/碗.webp');
@@ -4031,7 +4057,9 @@ function initLoadingPage() {
   if (!page || !bar || !pct) return;
 
   // Collect all asset URLs first (fast, synchronous)
-  var allUrls = collectAllAssetUrls();
+  var allUrls = [];
+  try { allUrls = collectAllAssetUrls(); } catch(e) { console.warn('collectAllAssetUrls error:', e); }
+
   var total = 0;
   for (var i = 0; i < allUrls.length; i++) {
     if (allUrls[i] && !_preloaded[allUrls[i]]) total++;
@@ -4045,7 +4073,8 @@ function initLoadingPage() {
   }
 
   var startTime = Date.now();
-  var minShowTime = 800; // minimum time to show loading page (ms)
+  var minShowTime = 500;
+  var maxWaitTime = 8000; // dismiss after 8s max, keep loading in background
 
   // Random tips while loading
   var tips = ['面条正在擀制中...','高汤正在熬制中...','辣椒正在翻炒中...','花生正在剥壳中...','牛肉正在卤制中...','红油正在炼制中...','臊子正在炒制中...','香菜正在切碎中...'];
@@ -4056,23 +4085,83 @@ function initLoadingPage() {
     tip.textContent = tips[tipIdx];
   }, 1200);
 
-  loadAssetsTracked(allUrls, function(done, totalCount) {
-    var pctVal = Math.round((done / totalCount) * 100);
-    bar.style.width = pctVal + '%';
-    pct.textContent = pctVal + '%';
-  }, function() {
+  var finished = false;
+  var realDone = 0;
+  var realTotal = total;
+
+  function finish() {
+    if (finished) return;
+    finished = true;
     clearInterval(tipTimer);
+    clearInterval(progressTimer);
+    clearTimeout(safetyTimer);
+    clearTimeout(maxTimer);
     tip.textContent = '';
     bar.style.width = '100%';
     pct.textContent = '完成!';
 
-    // Ensure minimum display time
     var elapsed = Date.now() - startTime;
     var remaining = Math.max(0, minShowTime - elapsed);
     setTimeout(function() {
       page.classList.add('hide');
       setTimeout(function() { page.classList.add('done'); }, 500);
     }, remaining);
+
+    // Continue preloading remaining assets in background
+    if (realDone < realTotal) {
+      setTimeout(function() { preloadAllAssets(); }, 1000);
+    }
+  }
+
+  // Max wait: dismiss loading page after 8s no matter what
+  var maxTimer = setTimeout(function() {
+    console.warn('[preload] Max wait (' + maxWaitTime + 'ms) reached, ' + realDone + '/' + realTotal + ' loaded — dismissing');
+    finish();
+  }, maxWaitTime);
+
+  // Safety fallback: dismiss after 15s (in case maxTimer fails somehow)
+  var safetyTimer = setTimeout(function() {
+    console.warn('[preload] Safety timeout (15s) — force dismissing');
+    finish();
+  }, 15000);
+
+  // Simulate progress even if real loading stalls (so bar never looks frozen)
+  var simPct = 0;
+  var progressTimer = setInterval(function() {
+    if (simPct < 90) {
+      simPct += Math.max(1, (90 - simPct) * 0.06);
+      bar.style.width = Math.round(simPct) + '%';
+      pct.textContent = Math.round(simPct) + '%';
+    }
+  }, 400);
+
+  loadAssetsTracked(allUrls, function(done, totalCount) {
+    realDone = done;
+    var realPct = Math.round((done / totalCount) * 100);
+    // Jump simulated progress to match real progress (but never go backwards)
+    if (realPct > simPct) simPct = realPct;
+    bar.style.width = Math.round(simPct) + '%';
+    pct.textContent = Math.round(simPct) + '%';
+  }, function() {
+    realDone = realTotal;
+    clearTimeout(maxTimer);
+    clearTimeout(safetyTimer);
+    finish();
+  });
+
+  // Tap to skip (emergency escape for users)
+  page.style.pointerEvents = 'auto';
+  page.addEventListener('click', function skipOnTap(e) {
+    if (finished) return;
+    console.log('[preload] User tapped to skip loading');
+    finish();
+    page.removeEventListener('click', skipOnTap);
+  });
+  page.addEventListener('touchend', function skipOnTouch(e) {
+    if (finished) return;
+    console.log('[preload] User touched to skip loading');
+    finish();
+    page.removeEventListener('touchend', skipOnTouch);
   });
 }
 
@@ -4459,6 +4548,8 @@ init();
 var cv = document.getElementById('dino-game-cv'), ctx = cv.getContext('2d');
 var bcv = document.getElementById('dino-bg-cv'), bctx = bcv.getContext('2d');
 var DPR = Math.min(window.devicePixelRatio || 1, 2);
+bcv.width = 412 * DPR; bcv.height = 874 * DPR; bcv.style.width = '412px'; bcv.style.height = '874px';
+bctx.scale(DPR, DPR);
 cv.width = 402 * DPR; cv.height = 874 * DPR; cv.style.width = '402px'; cv.style.height = '874px';
 ctx.scale(DPR, DPR);
 var ld = document.getElementById('dino-loading');
@@ -4475,25 +4566,25 @@ var container = document.getElementById('page-waiting');
 var W = 402, H = 874, GY = 820, PX = 80;
 var GR = 0.65, JV = -13, IS = 5, MS = 14, IF = 80;
 var ST = {LOADING:0, IDLE:1, PLAY:2, OVER:3, EMPTY:4}; var gs = ST.LOADING;
-var SCR_Y = 210;
+var SCR_Y = 100;
 
 var IMG = {};
 var P = {
-  pigStand:'dino-assets/猪的原始状态.webp', pigRun:'dino-assets/小猪奔跑.gif',
+  pigStand:'dino-assets/猪的原始状态.webp', pigRun:'dino-assets/小猪奔跑_opt.gif',
   pigJump:'dino-assets/小猪跳跃.webp', mountain:'dino-assets/山.webp',
   bg:'dino-assets/等待界面/背景.webp', onion:'dino-assets/葱的原始状态.webp',
   garlic:'dino-assets/蒜的原始状态.webp', radish:'dino-assets/萝卜的原始状态.webp',
-  pot:'dino-assets/锅.gif', gameOver:'dino-assets/游戏结束.webp',
+  pot:'dino-assets/锅_opt.gif', gameOver:'dino-assets/游戏结束.webp',
   heartF:'dino-assets/有命的爱心.webp', heartE:'dino-assets/没命的爱心.webp',
-  waitBg:'dino-assets/等待界面/等待界面.webp', backBtn:'dino-assets/等待界面/返回键.webp',
+  backBtn:'dino-assets/等待界面/返回键.webp',
   miniBtn:'dino-assets/等待界面/小程序按钮.webp', dineIcon:'dino-assets/等待界面/堂食标志.webp',
   dineAddr:'dino-assets/等待界面/堂食地址.webp', statusBg:'dino-assets/等待界面/制作中状态条背景.webp',
-  pigStir:'小猪搅拌面条_nobg.gif', menuImg:'dino-assets/等待界面/菜单.webp',
+  pigStir:'小猪搅拌面条_nobg_opt.gif', menuImg:'dino-assets/等待界面/菜单.webp',
   scoreLabel:'dino-assets/分数：.webp', recordLabel:'dino-assets/记录：.webp',
   rankBtn:'dino-assets/排行榜单.webp', doneStatus:'dino-assets/等待界面/制作完成状态条.webp',
   orderTitle:'dino-assets/等待界面/确认订单.webp'
 };
-var startImg = new Image(); startImg.src = 'dino-assets/开始游戏键.webp';
+// start button is now a DOM element (no image needed)
 
 var pig, obs, pot, score, lives, spd, fc, nObs, inv, mtn, best, otm;
 try { best = parseInt(localStorage.getItem('pigRunBest') || '0'); } catch(e) {}
@@ -4501,7 +4592,7 @@ var O = [{k:'onion',w:38,h:56},{k:'garlic',w:42,h:40},{k:'radish',w:45,h:46}];
 
 function load(){
   var ps = Object.entries(P).filter(function(e){ return !/\.mp4$/.test(e[1]); }).map(function(e){ var k=e[0],s=e[1]; return new Promise(function(r){ var i=new Image(); i.onload=function(){ IMG[k]=i; r(); }; i.onerror=function(){ console.warn(s); r(); }; i.src=s; }); });
-  return Promise.all(ps.concat([new Promise(function(r){ if (startImg.complete) r(); else { startImg.onload=r; startImg.onerror=r; } })]));
+  return Promise.all(ps);
 }
 
 function rst(){
@@ -4609,12 +4700,11 @@ function dUI(){
 function drawBg(){ bctx.clearRect(0,0,W,H); dBg(); dHeader(); }
 function dVeggiesIdle(){
   if (gs !== ST.IDLE) return;
+  // Figma positions scaled 2x (402px wide)
   var veggies = [
-    {k:'onion', x:155, w:36, h:53},
-    {k:'garlic', x:268, w:40, h:38},
-    {k:'radish', x:330, w:42, h:43},
-    {k:'onion', x:60, w:30, h:44},
-    {k:'radish', x:210, w:38, h:39},
+    {k:'garlic', x:244, w:30, h:28},
+    {k:'radish', x:278, w:34, h:34},
+    {k:'onion', x:348, w:24, h:34},
   ];
   for (var i = 0; i < veggies.length; i++) {
     var v = veggies[i], im = IMG[v.k];
@@ -4627,21 +4717,38 @@ function drawGame(){ ctx.clearRect(0,0,W,H); if (gs===ST.EMPTY) return; dMtn(); 
 function draw(){ drawBg(); drawGame(); }
 
 function setupDOM(){
+  // Set hero food image from first order item
+  var items = window._dinoOrderItems || [];
+  var heroImg = document.getElementById('waiting-hero');
+  if (heroImg && items.length > 0) {
+    var firstItem = items[0];
+    var heroSrc = (typeof getCartImg === 'function') ? getCartImg(firstItem.name) : ('购物车菜品/'+firstItem.name+'（购物车）.webp');
+    if (typeof itemHeroMap !== 'undefined' && itemHeroMap[firstItem.name]) {
+      heroSrc = itemHeroMap[firstItem.name];
+    }
+    heroImg.src = heroSrc;
+    heroImg.style.display = '';
+  } else if (heroImg) {
+    heroImg.style.display = 'none';
+  }
+  var storeInfo = document.querySelector('.waiting-store-info');
+  if (storeInfo) storeInfo.style.display = (items.length > 0) ? '' : 'none';
+
   var sbh = IMG.statusBg ? Math.round(325*(IMG.statusBg.height/IMG.statusBg.width)) : 84;
   var sbDw = 325, sbDh = sbh;
   var h = '';
+  h += '<div style="height:44px;"></div>';
   h += '<div style="position:relative;width:402px;height:'+sbDh+'px">';
   h += '<img src="'+P.statusBg+'" style="position:absolute;left:36px;top:0;width:'+sbDw+'px;height:'+sbDh+'px">';
   h += '<div id="dinoStirGif" style="position:absolute;left:162px;top:6px;width:72px;height:72px;border-radius:50%;overflow:hidden;z-index:1">';
-  h += '<img src="小猪搅拌面条_nobg.gif" style="width:100%;height:100%;object-fit:cover">';
+  h += '<img src="小猪搅拌面条_nobg_opt.gif" style="width:100%;height:100%;object-fit:cover">';
   h += '</div>';
   h += '</div>';
-  h += '<div style="height:25px;"></div>';
-  // Render ordered items
-  var items = window._dinoOrderItems || [];
+  h += '<div style="height:18px;"></div>';
+  // Render ordered items in Figma-style white card
   if (items.length > 0) {
-    h += '<div style="width:368px;margin:0 auto;background:#fff;border-radius:12px;padding:16px 16px 12px">';
-    h += '<div style="font-size:14px;font-weight:400;color:#000;margin-bottom:12px">订单详情</div>';
+    h += '<div style="width:368px;margin:0 auto;background:#fff;border-radius:10px;padding:16px 16px 12px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">';
+    h += '<div style="font-size:14px;font-weight:500;color:#000;margin-bottom:12px">餐品详情</div>';
     items.forEach(function(it){
       var img = typeof getCartImg === 'function' ? getCartImg(it.name) : ('购物车菜品/'+it.name+'（购物车）.webp');
       h += '<div style="display:flex;align-items:center;margin-bottom:10px;gap:10px">';
@@ -4660,7 +4767,7 @@ function setupDOM(){
   sinner.innerHTML = h;
   scr.style.top = SCR_Y+'px';
   scr.style.height = (H-SCR_Y)+'px';
-  sbtn.style.left = ((W-141)/2)+'px'; sbtn.style.top = '710px'; sbtn.style.width = '141px'; sbtn.style.height = '46px'; sbtn.style.display = 'block';
+  sbtn.style.left = '136px'; sbtn.style.top = '710px'; sbtn.style.width = '140px'; sbtn.style.height = '46px'; sbtn.style.display = 'flex';
   scr._statusImg = scr.querySelector('img');
 }
 function endGame(){ resetToIdle(); }
@@ -4733,7 +4840,7 @@ window.showWaitingPage = function(items){
   } else {
     setupDOM();
     rst(); gs = ST.IDLE;
-    sbtn.style.display = 'block'; obtn.style.display = 'none';
+    sbtn.style.display = 'flex'; obtn.style.display = 'none';
     bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = '';
     ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0;
     ovlCurrH = 300; uiCurrY = GY-140; mtnOffset = 0; gyOffset = 0;
