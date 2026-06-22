@@ -1595,6 +1595,11 @@ html.webp .confirm-top {
   opacity:0; transition: opacity 0.3s ease;
 }
 #page-waiting.show { display:block; opacity:1; pointer-events:auto; }
+.waiting-bg-img {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px; object-fit:fill;
+  z-index:0; pointer-events:none;
+}
 #dino-bg-cv {
   display:block; width:412px; height:874px;
   position:absolute; left:-5px; top:0; z-index:1; pointer-events:none;
@@ -1947,6 +1952,7 @@ html.webp .confirm-top {
 
   <!-- Pig Runner Waiting Game (outside app-content, z:300) -->
   <div id="page-waiting">
+    <img class="waiting-bg-img" id="waiting-bg-img" src="游戏开始底图.png" alt="">
     <div class="waiting-top"></div>
     <img class="waiting-hero-img" id="waiting-hero" alt="">
     <div class="waiting-store-info">
@@ -4562,6 +4568,7 @@ var backBtn = document.querySelector('.waiting-back-btn');
 var obtn = document.getElementById('dino-over-btns');
 var bovl = document.getElementById('dino-brown-overlay');
 var container = document.getElementById('page-waiting');
+var bgImg = document.getElementById('waiting-bg-img');
 
 var W = 402, H = 874, GY = 820, PX = 80;
 var GR = 0.65, JV = -13, IS = 5, MS = 14, IF = 80;
@@ -4791,12 +4798,14 @@ container.addEventListener('touchmove', function(e){ if (e.target.closest('#dino
 document.addEventListener('keydown', function(e){ if (e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') { e.preventDefault(); if (gs===ST.IDLE) start(); else if (gs===ST.OVER&&otm>20) start(); else jp(); } });
 
 function start(){ rst(); gs = ST.PLAY; sbtn.style.display = 'none'; obtn.style.display = 'none'; bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = ''; pgeIdle.style.display = 'none'; pteIdle.style.display = 'none'; ovlTargetH = H; uiTargetY = GY-640; mtnTargetY = -200; gyTargetY = -50;
+  if (bgImg) bgImg.style.display = 'none';
   if (scr._statusImg) scr._statusImg.src = P.statusBg;
   var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
   document.getElementById('navBar').style.display = 'none'; container.style.zIndex = '300';
   var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.remove('show');
 }
 function resetToIdle(){ rst(); gs = ST.EMPTY; sbtn.style.display = 'none'; obtn.style.display = 'none'; ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0; bovl.style.display = 'none'; cv.style.display = 'none'; pte.style.display = 'none'; pge.style.display = 'none'; pgeIdle.style.display = 'none'; pteIdle.style.display = 'none';
+  if (bgImg) bgImg.style.display = '';
   var stirGif = document.getElementById('dinoStirGif'); if (stirGif) stirGif.style.display = 'none';
   if (scr._statusImg && P.doneStatus) { scr._statusImg.src = P.doneStatus; scr._statusImg.style.left = '-80px'; }
   var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
@@ -4840,6 +4849,7 @@ window.showWaitingPage = function(items){
   } else {
     setupDOM();
     rst(); gs = ST.IDLE;
+    if (bgImg) bgImg.style.display = '';
     sbtn.style.display = 'flex'; obtn.style.display = 'none';
     bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = '';
     ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0;
