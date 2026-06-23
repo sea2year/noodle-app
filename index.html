@@ -4717,8 +4717,6 @@ function drawGame(){ ctx.clearRect(0,0,W,H); if (gs===ST.EMPTY) return; dMtn(); 
 function draw(){ drawBg(); drawGame(); }
 
 function setupDOM(){
-  // Set hero food image from first order item
-  var items = window._dinoOrderItems || [];
   // Hide hero/store-info/gradient — all baked into the Figma-exported canvas bg image
   var heroImg = document.getElementById('waiting-hero');
   if (heroImg) heroImg.style.display = 'none';
@@ -4727,41 +4725,11 @@ function setupDOM(){
   var waitingTop = document.getElementById('waiting-top');
   if (waitingTop) waitingTop.style.display = 'none';
 
-  var sbh = IMG.statusBg ? Math.round(325*(IMG.statusBg.height/IMG.statusBg.width)) : 84;
-  var sbDw = 325, sbDh = sbh;
-  var h = '';
-  h += '<div style="height:44px;"></div>';
-  h += '<div style="position:relative;width:402px;height:'+sbDh+'px">';
-  h += '<img src="'+P.statusBg+'" style="position:absolute;left:36px;top:0;width:'+sbDw+'px;height:'+sbDh+'px">';
-  h += '<div id="dinoStirGif" style="position:absolute;left:162px;top:6px;width:72px;height:72px;border-radius:50%;overflow:hidden;z-index:1">';
-  h += '<img src="小猪搅拌面条_nobg_opt.gif" style="width:100%;height:100%;object-fit:cover">';
-  h += '</div>';
-  h += '</div>';
-  h += '<div style="height:18px;"></div>';
-  // Render ordered items in Figma-style white card
-  if (items.length > 0) {
-    h += '<div style="width:368px;margin:0 auto;background:#fff;border-radius:10px;padding:16px 16px 12px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">';
-    h += '<div style="font-size:14px;font-weight:500;color:#000;margin-bottom:12px">餐品详情</div>';
-    items.forEach(function(it){
-      var img = typeof getCartImg === 'function' ? getCartImg(it.name) : ('购物车菜品/'+it.name+'（购物车）.webp');
-      h += '<div style="display:flex;align-items:center;margin-bottom:10px;gap:10px">';
-      h += '<img src="'+img+'" style="width:48px;height:48px;border-radius:8px;flex-shrink:0" onerror="this.style.display=\'none\'">';
-      h += '<span style="flex:1;font-size:13px;color:#333">'+it.name+'</span>';
-      h += '<span style="font-size:13px;color:#999;margin-right:4px">¥'+(it.price||0)+' ×'+(it.qty||1)+'</span>';
-      h += '<span style="font-size:14px;font-weight:600;color:#CA2626">¥'+Number(it.price*(it.qty||1)).toFixed(1)+'</span>';
-      h += '</div>';
-    });
-    var total = items.reduce(function(s,i){ return s+i.price*(i.qty||1); },0);
-    h += '<div style="border-top:1px solid #eee;padding-top:10px;display:flex;justify-content:space-between;font-size:14px">';
-    h += '<span style="color:#666">合计</span><span style="font-weight:700;color:#CA2626">¥'+Number(total).toFixed(1)+'</span>';
-    h += '</div></div>';
-  }
-  h += '<div style="height:300px;"></div>';
-  sinner.innerHTML = h;
+  // Minimal scroll area — status bar and card are in the Figma bg image
+  sinner.innerHTML = '<div style="height:700px;"></div>';
   scr.style.top = SCR_Y+'px';
   scr.style.height = (H-SCR_Y)+'px';
   sbtn.style.left = '136px'; sbtn.style.top = '710px'; sbtn.style.width = '140px'; sbtn.style.height = '46px'; sbtn.style.display = 'flex';
-  scr._statusImg = scr.querySelector('img');
 }
 function endGame(){ resetToIdle(); }
 
@@ -4784,15 +4752,10 @@ container.addEventListener('touchmove', function(e){ if (e.target.closest('#dino
 document.addEventListener('keydown', function(e){ if (e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') { e.preventDefault(); if (gs===ST.IDLE) start(); else if (gs===ST.OVER&&otm>20) start(); else jp(); } });
 
 function start(){ rst(); gs = ST.PLAY; sbtn.style.display = 'none'; obtn.style.display = 'none'; bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = ''; pgeIdle.style.display = 'none'; pteIdle.style.display = 'none'; ovlTargetH = H; uiTargetY = GY-640; mtnTargetY = -200; gyTargetY = -50;
-  if (scr._statusImg) scr._statusImg.src = P.statusBg;
-  var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
   document.getElementById('navBar').style.display = 'none'; container.style.zIndex = '300';
   var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.remove('show');
 }
 function resetToIdle(){ rst(); gs = ST.EMPTY; sbtn.style.display = 'none'; obtn.style.display = 'none'; ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0; bovl.style.display = 'none'; cv.style.display = 'none'; pte.style.display = 'none'; pge.style.display = 'none'; pgeIdle.style.display = 'none'; pteIdle.style.display = 'none';
-  var stirGif = document.getElementById('dinoStirGif'); if (stirGif) stirGif.style.display = 'none';
-  if (scr._statusImg && P.doneStatus) { scr._statusImg.src = P.doneStatus; scr._statusImg.style.left = '-80px'; }
-  var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
   if (_loopRaf) { cancelAnimationFrame(_loopRaf); _loopRaf = 0; }
   document.getElementById('navBar').style.display = ''; container.style.zIndex = '100';
   var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.add('show');
@@ -4837,8 +4800,6 @@ window.showWaitingPage = function(items){
     bovl.style.display = ''; cv.style.display = ''; pge.style.display = ''; pte.style.display = '';
     ovlTargetH = 300; uiTargetY = GY-140; mtnTargetY = 0; gyTargetY = 0;
     ovlCurrH = 300; uiCurrY = GY-140; mtnOffset = 0; gyOffset = 0;
-    if (scr._statusImg && P.statusBg) { scr._statusImg.src = P.statusBg; scr._statusImg.style.left = '36px'; }
-    var imgs = scr.querySelectorAll('img'); if (imgs[1]) imgs[1].style.display = '';
     var tt = document.querySelector('.waiting-top-title'); if (tt) tt.style.display = '';
     // 重新启动游戏循环
     if (_loopRaf) { cancelAnimationFrame(_loopRaf); }
