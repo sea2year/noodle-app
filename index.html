@@ -288,13 +288,13 @@ body {
   width:442px; height:61px;
   background:#fff;
   box-shadow:0 -3px 4px rgba(180,37,37,0.26);
-  z-index:101; display:none;
+  z-index:400; display:none;
 }
 .nav-bar-bg.show { display:block; }
 .nav-bar {
   position:absolute; left:41px; top:822px;
   width:326px; height:49px;
-  z-index:102;
+  z-index:401;
 }
 .nav-item {
   position:absolute;
@@ -1009,13 +1009,13 @@ html.webp .confirm-top {
 /* Pig status group */
 .waiting-pig-status {
   position:absolute; left:30px; top:144px;
-  width:370px; height:100px;
+  width:370px; height:130px;
   z-index:6; pointer-events:none;
   transition:opacity 0.3s ease;
 }
 .waiting-pig-status .pig-status-avatar {
   position:absolute; left:0; top:0;
-  width:100px; height:100px;
+  width:130px; height:130px;
   object-fit:contain;
 }
 .waiting-pig-status .pig-status-bubble {
@@ -1640,6 +1640,101 @@ html.webp .confirm-top {
 .splash-btn-custom:active { opacity:0.8; }
 .splash-btn-cancel:active { opacity:0.8; }
 
+/* ===== Entry Popup (Figma: 首页 最终版 弹窗) ===== */
+.entry-popup {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  z-index:350; display:none;
+  pointer-events:none;
+}
+.entry-popup.show {
+  display:block; pointer-events:auto;
+}
+.entry-popup-mask {
+  position:absolute; left:0; top:0;
+  width:402px; height:874px;
+  background:rgba(0,0,0,0.35);
+  opacity:0;
+  transition:opacity 0.5s ease;
+}
+.entry-popup.show .entry-popup-mask { opacity:1; }
+
+/* Figma: 一起自制小面 FRAME at (36,10) 354x293 */
+.entry-popup-title {
+  position:absolute; left:36px; top:10px;
+  width:354px; height:auto;
+  z-index:3;
+  opacity:0;
+  transform:translateY(-20px);
+  transition:opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s;
+}
+.entry-popup.show .entry-popup-title {
+  opacity:1; transform:translateY(0);
+}
+
+/* Figma: 弹窗 FRAME at (0,413) 402x408 h=408 r=22 */
+.entry-popup-panel {
+  position:absolute; left:0; top:443px;
+  width:402px; height:408px;
+  border-radius:22px;
+  transform:translateY(calc(100% + 53px));
+  transition:transform 0.65s cubic-bezier(0.25,0.1,0.25,1);
+  z-index:2;
+  padding:39px 20px 38px;
+  box-shadow:0 -8px 30px rgba(0,0,0,0.15);
+}
+.entry-popup.show .entry-popup-panel { transform:translateY(0); }
+
+.entry-popup-bg {
+  position:absolute; left:0; top:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  border-radius:22px;
+  z-index:0; pointer-events:none;
+}
+
+.entry-popup-close {
+  position:absolute; right:18px; top:14px;
+  width:28px; height:28px;
+  border-radius:50%;
+  background:rgba(0,0,0,0.06);
+  color:rgba(0,0,0,0.4);
+  font-size:18px; line-height:28px;
+  text-align:center;
+  cursor:pointer; z-index:3;
+  font-family:'Inter','PingFang SC',sans-serif;
+}
+.entry-popup-close:active { background:rgba(0,0,0,0.15); }
+
+/* Figma: buttons and coupon — absolute positioned to match Figma pixel-perfect */
+/* 菜单点餐 at (20,452) → rel (20,39), 173x159 */
+.entry-btn-img.btn-menu {
+  position:absolute; left:20px; top:54px;
+  width:173px; height:159px;
+  object-fit:contain; cursor:pointer;
+  z-index:1;
+  transition:transform 0.15s ease;
+}
+/* 自由点餐 at (211,453) → rel (211,40), 170x160 */
+.entry-btn-img.btn-custom {
+  position:absolute; left:211px; top:55px;
+  width:170px; height:160px;
+  object-fit:contain; cursor:pointer;
+  z-index:1;
+  transition:transform 0.15s ease;
+}
+.entry-btn-img:active { transform:scale(0.96); }
+
+/* 端午福利优惠券 at (20,651) → rel (20,238), 359x132 */
+.entry-coupon-img {
+  position:absolute; left:20px; top:228px;
+  width:359px; height:132px;
+  object-fit:contain; cursor:pointer;
+  z-index:1;
+  transition:opacity 0.15s ease;
+}
+.entry-coupon-img:active { opacity:0.85; }
+
 /* ===== Loading Page ===== */
 #loadingPage {
   position:absolute; left:0; top:0;
@@ -1768,6 +1863,19 @@ html.webp .confirm-top {
     <picture><source srcset="首页广告/广告排骨面.webp" type="image/webp"><img class="splash-noodle-img" src="首页广告/广告排骨面.webp"></picture>
     <picture><source srcset="首页广告/广告定制按钮.webp" type="image/webp"><img class="splash-btn-custom" src="首页广告/广告定制按钮.webp" onclick="dismissSplash('custom')"></picture>
     <picture><source srcset="首页广告/广告取消按钮.webp" type="image/webp"><img class="splash-btn-cancel" src="首页广告/广告取消按钮.webp" onclick="dismissSplash('cancel')"></picture>
+  </div>
+
+  <!-- Entry Popup (Figma: 首页 最终版 弹窗) -->
+  <div class="entry-popup" id="entryPopup">
+    <div class="entry-popup-mask"></div>
+    <img class="entry-popup-title" src="入场动画 不看广告/一起自制小面.png" alt="">
+    <div class="entry-popup-panel" id="entryPopupPanel">
+      <img class="entry-popup-bg" src="入场动画 不看广告/弹窗底图.png" alt="">
+      <div class="entry-popup-close" onclick="dismissEntryPopup()">✕</div>
+      <img class="entry-btn-img btn-menu" src="入场动画 不看广告/菜单点餐.png" onclick="entryChooseMenu()" alt="菜单点餐">
+      <img class="entry-btn-img btn-custom" src="入场动画 不看广告/自由点餐.png" onclick="entryChooseCustom()" alt="自由点餐">
+      <img class="entry-coupon-img" src="入场动画 不看广告/端午福利优惠券.png" onclick="entryClaimCoupon()" alt="端午福利优惠券">
+    </div>
   </div>
 
   <div class="app-content">
@@ -2095,7 +2203,7 @@ html.webp .confirm-top {
 
   <!-- Nav bar (outside app-content to stay above cart sheet) -->
   <div class="nav-bar-bg"></div>
-  <div class="nav-bar" id="navBar"></div>
+  <div class="nav-bar" id="navBar" style="display:none;"></div>
 </div>
 
 
@@ -3645,6 +3753,7 @@ function doSwitchTab(name) {
     });
   } else {
     // Going to a tab page: hide others first, then fade in new on top
+    dismissEntryPopup();
     Object.keys(pageMap).forEach(function(tabName) {
       if (tabName === name) return;
       var pageEl = document.getElementById(pageMap[tabName]);
@@ -4336,6 +4445,9 @@ function dismissSplash(action) {
     // Remove splash from DOM after fade-out
     setTimeout(function() {
       splash.style.display = 'none';
+      document.getElementById('navBar').style.display = '';
+      var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.add('show');
+      showEntryPopup();
     }, 600);
     return;
   }
@@ -4366,8 +4478,113 @@ function dismissSplash(action) {
   }, 1200);
   setTimeout(function() {
     splash.style.display = 'none';
+    document.getElementById('navBar').style.display = '';
+    var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.add('show');
+    showEntryPopup();
   }, 6000);
 }
+
+// ===== Entry Popup (Figma: 首页 最终版 弹窗) =====
+var _entryPopupShown = false;
+function showEntryPopup() {
+  if (_entryPopupShown) return;
+  _entryPopupShown = true;
+  var el = document.getElementById('entryPopup');
+  if (!el || el.classList.contains('show')) return;
+
+  // Make visible while keeping everything in initial animation state
+  el.style.display = 'block';
+  var mask = el.querySelector('.entry-popup-mask');
+  var title = el.querySelector('.entry-popup-title');
+  var panel = document.getElementById('entryPopupPanel');
+
+  if (mask) { mask.style.opacity = '0'; mask.style.transition = 'none'; }
+  if (title) { title.style.opacity = '0'; title.style.transform = 'translateY(-20px)'; title.style.transition = 'none'; }
+  if (panel) { panel.style.transition = 'none'; panel.style.transform = 'translateY(calc(100% + 53px))'; }
+
+  // Force reflow so the browser registers off-screen positions
+  el.offsetHeight;
+
+  // Add show class and clear inline styles — CSS transitions take over
+  el.classList.add('show');
+  if (mask) { mask.style.opacity = ''; mask.style.transition = ''; }
+  if (title) { title.style.opacity = ''; title.style.transform = ''; title.style.transition = ''; }
+  if (panel) { panel.style.transition = ''; panel.style.transform = ''; }
+}
+
+function dismissEntryPopup() {
+  var el = document.getElementById('entryPopup');
+  if (!el || !el.classList.contains('show')) return;
+  var mask = el.querySelector('.entry-popup-mask');
+  var panel = document.getElementById('entryPopupPanel');
+  var title = el.querySelector('.entry-popup-title');
+  if (mask) mask.style.opacity = '0';
+  if (title) { title.style.opacity = '0'; title.style.transform = 'translateY(-20px)'; }
+  if (panel) { panel.style.transition = 'transform 0.5s cubic-bezier(0.25,0.1,0.25,1)'; panel.style.transform = 'translateY(calc(100% + 53px))'; }
+  setTimeout(function() {
+    el.classList.remove('show');
+    if (mask) mask.style.opacity = '';
+    if (title) { title.style.opacity = ''; title.style.transform = ''; }
+    if (panel) { panel.style.transform = ''; panel.style.transition = ''; }
+  }, 650);
+}
+
+function entryChooseMenu() {
+  dismissEntryPopup();
+  switchTab('菜单');
+}
+
+function entryChooseCustom() {
+  dismissEntryPopup();
+}
+
+function entryClaimCoupon() {
+  alert('优惠券已领取！');
+}
+
+// Swipe-to-dismiss on the popup panel
+(function() {
+  var _entrySwipeY0 = 0, _entrySwipeDY = 0, _entrySwiping = false;
+  document.addEventListener('touchstart', function(e) {
+    var panel = document.getElementById('entryPopupPanel');
+    if (!panel) return;
+    var t = e.touches[0];
+    if (!t) return;
+    var rect = panel.getBoundingClientRect();
+    if (t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom) {
+      _entrySwipeY0 = t.clientY;
+      _entrySwipeDY = 0;
+      _entrySwiping = true;
+      panel.style.transition = 'none';
+    }
+  }, {passive: false});
+  document.addEventListener('touchmove', function(e) {
+    if (!_entrySwiping) return;
+    var t = e.touches[0];
+    if (!t) return;
+    _entrySwipeDY = t.clientY - _entrySwipeY0;
+    if (_entrySwipeDY > 0) {
+      e.preventDefault();
+      var panel = document.getElementById('entryPopupPanel');
+      var scale = parseFloat(getComputedStyle(document.querySelector('.app')).zoom) || 1;
+      if (panel) panel.style.transform = 'translateY(' + (_entrySwipeDY / scale) + 'px)';
+    }
+  }, {passive: false});
+  document.addEventListener('touchend', function(e) {
+    if (!_entrySwiping) return;
+    _entrySwiping = false;
+    var panel = document.getElementById('entryPopupPanel');
+    if (!panel) return;
+    panel.style.transition = 'transform 0.5s cubic-bezier(0.25,0.1,0.25,1)';
+    var scale = parseFloat(getComputedStyle(document.querySelector('.app')).zoom) || 1;
+    if (_entrySwipeDY / scale > 100) {
+      dismissEntryPopup();
+    } else {
+      panel.style.transform = 'translateY(0)';
+      setTimeout(function() { panel.style.transition = ''; panel.style.transform = ''; }, 650);
+    }
+  });
+})();
 
 // ===== Confirm Order Page =====
 const confirmAddons = [
@@ -4704,18 +4921,18 @@ var SCR_Y = 100;
 
 var IMG = {};
 var P = {
-  pigStand:'dino-assets/猪的原始状态.webp', pigRun:'dino-assets/小猪奔跑_opt.gif',
+  pigStand:'dino-assets/猪的原始状态.webp', pigRun:'dino-assets/小猪奔跑.gif',
   pigJump:'dino-assets/小猪跳跃.webp', mountain:'dino-assets/山.webp',
-  bg:'游戏开始页面/游戏开始底图.webp', gameBg:'游戏开始页面/游戏页面.png', onion:'dino-assets/葱的原始状态.webp',
+  bg:'游戏开始页面/游戏开始底图.webp', gameBg:'游戏开始页面/游戏页面.png', overBg:'游戏开始页面/游戏结束底图_副本.webp', onion:'dino-assets/葱的原始状态.webp',
   garlic:'dino-assets/蒜的原始状态.webp', radish:'dino-assets/萝卜的原始状态.webp',
-  pot:'dino-assets/锅_opt.gif', gameOver:'dino-assets/游戏结束.webp',
+  pot:'dino-assets/锅.gif', gameOver:'dino-assets/游戏结束.webp',
   heartF:'dino-assets/有命的爱心.webp', heartE:'dino-assets/没命的爱心.webp',
   backBtn:'dino-assets/等待界面/返回键.webp',
   miniBtn:'dino-assets/等待界面/小程序按钮.webp', dineIcon:'游戏开始页面/堂食图标.png',
   dineAddr:'dino-assets/等待界面/堂食地址.webp', statusBg:'dino-assets/等待界面/制作中状态条背景.webp',
   pigStir:'小猪搅拌面条_nobg_opt.gif', menuImg:'dino-assets/等待界面/菜单.webp',
   scoreLabel:'dino-assets/分数：.webp', recordLabel:'dino-assets/记录：.webp',
-  rankBtn:'dino-assets/排行榜单.webp', doneStatus:'dino-assets/等待界面/制作完成状态条.webp',
+  rankBtn:'dino-assets/排行榜单.webp', gradientBg:'dino-assets/棕色渐变背景.webp', doneStatus:'dino-assets/等待界面/制作完成状态条.webp',
   orderTitle:'dino-assets/等待界面/确认订单.webp'
 };
 // start button is now a DOM element (no image needed)
@@ -4775,26 +4992,39 @@ function upPig(){
   else { pge.style.display = 'none'; }
 }
 function upPot(){
-  // Pot is already in the background image
-  pte.style.display = 'none';
-  pteIdle.style.display = 'none';
+  if (gs !== ST.PLAY) {
+    pte.style.display = 'none';
+    pteIdle.style.display = 'none';
+    return;
+  }
+  if (IMG.pot) {
+    pte.style.display = '';
+    pteIdle.style.display = 'none';
+    if (pte.getAttribute('d') !== P.pot) { pte.src = P.pot; pte.setAttribute('d', P.pot); }
+    pte.style.left = pot.x+'px';
+    pte.style.top = (GY-pot.h+gyOffset)+'px';
+    pte.style.width = pot.w+'px';
+    pte.style.height = pot.h+'px';
+  }
 }
 
 function dBg(){
-  if (gs===ST.PLAY||gs===ST.OVER) { if (IMG.gameBg) { bctx.drawImage(IMG.gameBg, -4, -4, W+8, H+8); } }
+  if (gs===ST.PLAY) { if (IMG.gameBg) { bctx.drawImage(IMG.gameBg, -4, -4, W+8, H+8); } }
+  else if (gs===ST.OVER) { if (IMG.overBg) { bctx.drawImage(IMG.overBg, -4, -4, W+8, H+8); } }
   else { if (IMG.bg) { bctx.drawImage(IMG.bg, -4, -4, W+8, H+8); } }
 }
 function dHeader(){
   bctx.textAlign = 'left';
 }
 function dOver(){
-  var curY = uiCurrY, cy = Math.round(curY);
-  if (IMG.gameOver) { var gh = 80, gw = gh*(IMG.gameOver.width/IMG.gameOver.height); ctx.drawImage(IMG.gameOver, W/2-gw/2, cy-10, gw, gh); }
+  var cy = H/2 - 220;
+  if (IMG.gameOver) { var gh = 80, gw = gh*(IMG.gameOver.width/IMG.gameOver.height); ctx.drawImage(IMG.gameOver, W/2-gw/2, cy-80, gw, gh); }
   var ds = Math.floor(score/10); if (ds > best) { best = ds; try { localStorage.setItem('pigRunBest', ds); } catch(e) {} }
-  var lx = W/2-70, ly = cy+90;
-  if (IMG.scoreLabel) { var sh = 14, sw = sh*(IMG.scoreLabel.width/IMG.scoreLabel.height); ctx.drawImage(IMG.scoreLabel, lx, ly, sw, sh); ctx.fillStyle = '#CA2626'; ctx.font = 'bold 15px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.textAlign = 'left'; ctx.fillText(ds, lx+sw+64, ly+12); }
+  var lx = W/2-30, ly = cy+20;
+  ctx.fillStyle = '#FFFFFF'; ctx.font = 'bold 15px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('分数：'+ds, lx, ly+12);
   var ly2 = ly+24;
-  if (IMG.recordLabel) { var rh = 14, rw = rh*(IMG.recordLabel.width/IMG.recordLabel.height); ctx.drawImage(IMG.recordLabel, lx, ly2, rw, rh); ctx.fillStyle = '#CA2626'; ctx.font = 'bold 15px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.textAlign = 'left'; ctx.fillText(best, lx+rw+64, ly2+12); }
+  ctx.fillText('记录：'+best, lx, ly2+12);
   if (IMG.rankBtn) { var rankY = !_rankDone ? _rankY : (ly2+26); ctx.drawImage(IMG.rankBtn, W/2-IMG.rankBtn.width/4, rankY, IMG.rankBtn.width/2, IMG.rankBtn.height/2); }
   ctx.textAlign = 'left';
 }
@@ -4806,13 +5036,13 @@ var _rankY = -300, _rankVy = 0, _rankBounce = 0, _rankDone = true;
 
 function dMtn(){ if (!IMG.mountain) return; var h = 100, w = 729*(h/152), y = GY-pot.h+110-h; y += mtnOffset; ctx.drawImage(IMG.mountain, mtn, y, w, h); ctx.drawImage(IMG.mountain, mtn+w, y, w, h); }
 function dObs(){ for (var i=0;i<obs.length;i++){ var o=obs[i], im=IMG[o.k]; if(!im) continue; ctx.save(); ctx.translate(o.x+o.w/2, o.y+o.h/2+gyOffset); ctx.rotate(Math.sin(o.x*0.05)*0.08); ctx.drawImage(im, -o.w/2, -o.h/2, o.w, o.h); ctx.restore(); } }
-function dPig(){ if (inv>0 && Math.floor(inv/5)%2===0) return; if (!pig.jumping && gs===ST.PLAY) return; if (gs===ST.IDLE) return; var im, iw, ih, ix, iy; if (pig.jumping && IMG.pigJump) { im=IMG.pigJump; iw=100; ih=100; ix=pig.x-10; iy=GY-ih+(pig.y-(GY-pig.h))*0.8+gyOffset; } else if (IMG.pigStand) { im=IMG.pigStand; iw=80; ih=55; ix=pig.x; iy=pig.y+gyOffset; } else return; ctx.drawImage(im, ix, iy, iw, ih); }
+function dPig(){ if (inv>0 && Math.floor(inv/5)%2===0) return; if (gs===ST.IDLE||gs===ST.OVER) return; if (!pig.jumping && gs===ST.PLAY) return; var im, iw, ih, ix, iy; if (pig.jumping && IMG.pigJump) { im=IMG.pigJump; iw=100; ih=100; ix=pig.x-10; iy=GY-ih+(pig.y-(GY-pig.h))*0.8+gyOffset; } else if (IMG.pigStand) { im=IMG.pigStand; iw=80; ih=55; ix=pig.x; iy=pig.y+gyOffset; } else return; ctx.drawImage(im, ix, iy, iw, ih); }
 function dUI(){
   var curY = uiCurrY; curY += (uiTargetY-curY)*0.08; uiCurrY = curY;
   var yy = Math.round(curY), bw = 128, bh = 40, bx = 16, by = yy+2, br = bh/2;
-  ctx.strokeStyle = '#B8865A'; ctx.lineWidth = 1; ctx.beginPath();
+  ctx.strokeStyle = '#CA2626'; ctx.lineWidth = 1; ctx.beginPath();
   ctx.roundRect(bx, by, bw, bh, br); ctx.stroke();
-  ctx.fillStyle = '#B8865A'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#CA2626'; ctx.textAlign = 'left';
   ctx.font = '14px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.fillText('分数', bx+14, by+bh/2+5);
   ctx.font = 'bold 20px "PingFang SC","Microsoft YaHei",sans-serif'; ctx.fillText(Math.floor(score/10), bx+66, by+bh/2+7);
   var hs = 36, hy = yy+4, hx0 = W-15-hs*2-8;
@@ -4822,10 +5052,15 @@ function drawBg(){ bctx.clearRect(0,0,W,H); dBg(); dHeader(); }
 function dVeggiesIdle(){
   // Veggies are already in the background image
 }
-function drawGame(){ ctx.clearRect(0,0,W,H); if (gs===ST.EMPTY||gs===ST.IDLE) return; dGround(); dMtn(); dVeggiesIdle(); dPig(); if (gs===ST.PLAY) { dObs(); dUI(); } if (gs===ST.OVER) dObs(); if (gs===ST.OVER&&otm>20) dOver(); }
+function drawGame(){ ctx.clearRect(0,0,W,H); if (gs===ST.EMPTY||gs===ST.IDLE) return; dGradientBg(); dGround(); dMtn(); dVeggiesIdle(); dPig(); if (gs===ST.PLAY) { dObs(); dUI(); } if (gs===ST.OVER) dObs(); if (gs===ST.OVER&&otm>20) dOver(); }
+function dGradientBg(){
+  if (gs===ST.OVER) return;
+  if (IMG.gradientBg) { ctx.drawImage(IMG.gradientBg, 0, 0, W, H); }
+}
 function dGround(){
+  if (gs===ST.OVER) return;
   var gy = GY + gyOffset;
-  ctx.strokeStyle = '#B8865A'; ctx.lineWidth = 2;
+  ctx.strokeStyle = '#000000'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
 }
 function draw(){ drawBg(); drawGame(); }
@@ -4927,6 +5162,8 @@ function start(){ rst(); gs = ST.PLAY; sbtn.style.display = 'none'; obtn.style.d
   if (foodCard) { foodCard.style.opacity = '0'; foodCard.style.pointerEvents = 'none'; }
   var pigStatus = document.getElementById('waitingPigStatus');
   if (pigStatus) pigStatus.style.opacity = '0';
+  var storeInfo = document.querySelector('.waiting-store-info');
+  if (storeInfo) storeInfo.style.display = 'none';
   if (bcv) bcv.style.display = '';
   if (cv) cv.style.display = '';
 }
@@ -4938,6 +5175,8 @@ function resetToIdle(){ rst(); gs = ST.EMPTY; sbtn.style.display = 'none'; obtn.
   if (foodCard) { foodCard.style.opacity = '1'; foodCard.style.pointerEvents = 'auto'; }
   var pigStatus = document.getElementById('waitingPigStatus');
   if (pigStatus) pigStatus.style.opacity = '1';
+  var storeInfo = document.querySelector('.waiting-store-info');
+  if (storeInfo) storeInfo.style.display = '';
   if (bcv) bcv.style.display = 'none';
   if (cv) cv.style.display = 'none';
 }
