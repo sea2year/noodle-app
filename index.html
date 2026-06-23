@@ -318,6 +318,10 @@ body {
 .loading-gif {
   width:200px; height:200px;
   object-fit:contain;
+  -webkit-transform:translateZ(0);
+  transform:translateZ(0);
+  backface-visibility:hidden;
+  image-rendering:auto;
 }
 .loading-overlay.fade-out { opacity:0; }
 .loading-text {
