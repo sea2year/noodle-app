@@ -40,11 +40,13 @@ body {
   position:absolute; left:0; top:0;
   width:402px; height:874px;
   z-index:0;
+  transition:opacity 0.15s ease;
 }
 .bg-photo img {
   width:100%; height:100%;
   object-fit:cover;
 }
+#bgPhotoCancel { z-index:1; }
 
 .app-content {
   position:relative; z-index:0;
@@ -1693,18 +1695,14 @@ html.webp .confirm-top {
   z-index:0; pointer-events:none;
 }
 
-.entry-popup-close {
-  position:absolute; right:18px; top:14px;
-  width:28px; height:28px;
-  border-radius:50%;
-  background:rgba(0,0,0,0.06);
-  color:rgba(0,0,0,0.4);
-  font-size:18px; line-height:28px;
-  text-align:center;
-  cursor:pointer; z-index:3;
-  font-family:'Inter','PingFang SC',sans-serif;
+/* Figma: 弹窗交互按钮 — invisible drag handle, visual is in bg image */
+.entry-popup-handle {
+  position:absolute; left:50%; top:6px;
+  width:65px; height:32px;
+  transform:translateX(-50%);
+  cursor:grab; z-index:3;
 }
-.entry-popup-close:active { background:rgba(0,0,0,0.15); }
+.entry-popup-handle:active { cursor:grabbing; }
 
 /* Figma: buttons and coupon — absolute positioned to match Figma pixel-perfect */
 /* 菜单点餐 at (20,452) → rel (20,39), 173x159 */
@@ -1867,11 +1865,11 @@ html.webp .confirm-top {
 
   <!-- Entry Popup (Figma: 首页 最终版 弹窗) -->
   <div class="entry-popup" id="entryPopup">
-    <div class="entry-popup-mask"></div>
+    <div class="entry-popup-mask" onclick="dismissEntryPopup();revealHomePage();"></div>
     <img class="entry-popup-title" src="入场动画 不看广告/一起自制小面.png" alt="">
     <div class="entry-popup-panel" id="entryPopupPanel">
       <img class="entry-popup-bg" src="入场动画 不看广告/弹窗底图.png" alt="">
-      <div class="entry-popup-close" onclick="dismissEntryPopup()">✕</div>
+      <div class="entry-popup-handle" id="entryPopupHandle"></div>
       <img class="entry-btn-img btn-menu" src="入场动画 不看广告/菜单点餐.png" onclick="entryChooseMenu()" alt="菜单点餐">
       <img class="entry-btn-img btn-custom" src="入场动画 不看广告/自由点餐.png" onclick="entryChooseCustom()" alt="自由点餐">
       <img class="entry-coupon-img" src="入场动画 不看广告/端午福利优惠券.png" onclick="entryClaimCoupon()" alt="端午福利优惠券">
@@ -1880,7 +1878,8 @@ html.webp .confirm-top {
 
   <div class="app-content">
   <!-- Full background photo -->
-  <div class="bg-photo"><picture><source srcset="首页底图.webp" type="image/webp"><img src="首页底图.png" alt=""></picture></div>
+  <div class="bg-photo" id="bgPhotoMain"><picture><source srcset="首页底图.webp" type="image/webp"><img src="首页底图.png" alt=""></picture></div>
+  <div class="bg-photo" id="bgPhotoCancel" style="opacity:0"><img src="取消闪屏广告底图.jpg" alt=""></div>
   <div class="bg-overlay"></div>
 
 
@@ -3751,6 +3750,9 @@ function doSwitchTab(name) {
       pageEl.style.opacity = '0';
       setTimeout(function() { pageEl.style.display = 'none'; pageEl.style.zIndex = ''; }, 350);
     });
+    document.getElementById('navBar').style.display = '';
+    document.getElementById('navBar').style.zIndex = '';
+    if (nbg) nbg.classList.add('show');
   } else {
     // Going to a tab page: hide others first, then fade in new on top
     dismissEntryPopup();
@@ -4433,15 +4435,29 @@ function dismissSplash(action) {
     updateBowl();
     updateNoodleSize();
     updatePrice();
-    // Only shimmer on segment controls, no scale / dark overlay
+    // Page starts slightly below — will slide UP with popup to -5px
     document.querySelector('.app').classList.add('shimmer');
-    renderJiaotou();
-    renderCondiments();
-    document.querySelectorAll('.jiaotou-item').forEach(function(el) { el.style.opacity = '0'; });
-    requestAnimationFrame(function() {
-      entranceAnimation();
-      condimentEntrance();
-    });
+    var ac = document.querySelector('.app-content');
+    ac.style.transition = 'none';
+    ac.style.transform = 'translateY(0px)';
+    document.getElementById('jiaotouLayer').style.opacity = '0';
+    var cs = document.getElementById('condimentScroll');
+    if (cs) cs.style.opacity = '0';
+    document.getElementById('priceTag').style.opacity = '0';
+    document.getElementById('methodSeg').style.opacity = '0';
+    document.getElementById('typeSeg').style.opacity = '0';
+    document.getElementById('portionSeg').style.opacity = '0';
+    document.getElementById('spiceSeg').style.opacity = '0';
+    document.querySelector('.jiaotou-title').style.opacity = '0';
+    document.querySelector('.bowl-area').style.opacity = '0';
+    document.querySelector('.random-btn').style.opacity = '0';
+    document.querySelector('.btn-enter-menu').style.opacity = '0';
+    document.querySelector('.btn-cart').style.opacity = '0';
+    // Switch home bg to cancel image (no transition on initial set)
+    document.getElementById('bgPhotoMain').style.transition = 'none';
+    document.getElementById('bgPhotoMain').style.opacity = '0';
+    document.getElementById('bgPhotoCancel').style.transition = 'none';
+    document.getElementById('bgPhotoCancel').style.opacity = '1';
     // Remove splash from DOM after fade-out
     setTimeout(function() {
       splash.style.display = 'none';
@@ -4466,6 +4482,10 @@ function dismissSplash(action) {
   updatePrice();
   splash.querySelector('.splash-noodle-img').classList.add('fly-to-bowl');
   splash.classList.add('fly-away');
+  // Show nav bar before enter animation so it scales together
+  document.getElementById('navBar').style.display = '';
+  document.getElementById('navBar').style.zIndex = '';
+  var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.add('show');
   document.querySelector('.app').classList.add('enter');
   setTimeout(function() {
     renderJiaotou();
@@ -4478,9 +4498,6 @@ function dismissSplash(action) {
   }, 1200);
   setTimeout(function() {
     splash.style.display = 'none';
-    document.getElementById('navBar').style.display = '';
-    var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.add('show');
-    showEntryPopup();
   }, 6000);
 }
 
@@ -4505,11 +4522,45 @@ function showEntryPopup() {
   // Force reflow so the browser registers off-screen positions
   el.offsetHeight;
 
+  // Animate page up along with popup
+  var ac = document.querySelector('.app-content');
+  ac.style.transition = 'transform 0.65s cubic-bezier(0.25, 0.1, 0.25, 1)';
+  ac.style.transform = 'translateY(-100px)';
+
   // Add show class and clear inline styles — CSS transitions take over
   el.classList.add('show');
   if (mask) { mask.style.opacity = ''; mask.style.transition = ''; }
   if (title) { title.style.opacity = ''; title.style.transform = ''; title.style.transition = ''; }
   if (panel) { panel.style.transition = ''; panel.style.transform = ''; }
+}
+
+function revealHomePage() {
+  // Swap bg to main
+  document.getElementById('bgPhotoMain').style.transition = '';
+  document.getElementById('bgPhotoMain').style.opacity = '1';
+  document.getElementById('bgPhotoCancel').style.transition = '';
+  document.getElementById('bgPhotoCancel').style.opacity = '0';
+  renderJiaotou();
+  renderCondiments();
+  var jl = document.getElementById('jiaotouLayer');
+  var cs = document.getElementById('condimentScroll');
+  if (jl) jl.style.opacity = '';
+  if (cs) cs.style.opacity = '';
+  document.getElementById('priceTag').style.opacity = '';
+  document.getElementById('methodSeg').style.opacity = '';
+  document.getElementById('typeSeg').style.opacity = '';
+  document.getElementById('portionSeg').style.opacity = '';
+  document.getElementById('spiceSeg').style.opacity = '';
+  document.querySelector('.jiaotou-title').style.opacity = '';
+  document.querySelector('.bowl-area').style.opacity = '';
+  document.querySelector('.random-btn').style.opacity = '';
+  document.querySelector('.btn-enter-menu').style.opacity = '';
+  document.querySelector('.btn-cart').style.opacity = '';
+  document.querySelectorAll('.jiaotou-item').forEach(function(el) { el.style.opacity = '0'; });
+  requestAnimationFrame(function() {
+    entranceAnimation();
+    condimentEntrance();
+  });
 }
 
 function dismissEntryPopup() {
@@ -4520,12 +4571,18 @@ function dismissEntryPopup() {
   var title = el.querySelector('.entry-popup-title');
   if (mask) mask.style.opacity = '0';
   if (title) { title.style.opacity = '0'; title.style.transform = 'translateY(-20px)'; }
-  if (panel) { panel.style.transition = 'transform 0.5s cubic-bezier(0.25,0.1,0.25,1)'; panel.style.transform = 'translateY(calc(100% + 53px))'; }
+  if (panel) { panel.style.transition = 'transform 0.65s cubic-bezier(0.25,0.1,0.25,1)'; panel.style.transform = 'translateY(calc(100% + 53px))'; }
+  // Slide page back down to normal
+  var ac = document.querySelector('.app-content');
+  ac.style.transition = 'transform 0.65s cubic-bezier(0.25, 0.1, 0.25, 1)';
+  ac.style.transform = 'translateY(0)';
   setTimeout(function() {
     el.classList.remove('show');
+    el.style.display = '';
     if (mask) mask.style.opacity = '';
     if (title) { title.style.opacity = ''; title.style.transform = ''; }
     if (panel) { panel.style.transform = ''; panel.style.transition = ''; }
+    ac.style.transition = '';
   }, 650);
 }
 
@@ -4536,41 +4593,61 @@ function entryChooseMenu() {
 
 function entryChooseCustom() {
   dismissEntryPopup();
+  revealHomePage();
 }
 
 function entryClaimCoupon() {
   alert('优惠券已领取！');
 }
 
-// Swipe-to-dismiss on the popup panel
+// Swipe/drag-to-dismiss via drag handle (mouse + touch)
 (function() {
   var _entrySwipeY0 = 0, _entrySwipeDY = 0, _entrySwiping = false;
-  document.addEventListener('touchstart', function(e) {
-    var panel = document.getElementById('entryPopupPanel');
-    if (!panel) return;
-    var t = e.touches[0];
-    if (!t) return;
-    var rect = panel.getBoundingClientRect();
-    if (t.clientX >= rect.left && t.clientX <= rect.right && t.clientY >= rect.top && t.clientY <= rect.bottom) {
-      _entrySwipeY0 = t.clientY;
+
+  function getClientY(e) {
+    if (e.touches) return e.touches[0].clientY;
+    return e.clientY;
+  }
+
+  function onStart(e) {
+    var el = document.getElementById('entryPopup');
+    if (!el || !el.classList.contains('show')) return;
+    var handle = document.getElementById('entryPopupHandle');
+    if (!handle) return;
+    var rect = handle.getBoundingClientRect();
+    var cy = getClientY(e);
+    var cx = e.touches ? e.touches[0].clientX : e.clientX;
+    if (cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom) {
+      _entrySwipeY0 = cy;
       _entrySwipeDY = 0;
       _entrySwiping = true;
-      panel.style.transition = 'none';
+      var panel = document.getElementById('entryPopupPanel');
+      if (panel) panel.style.transition = 'none';
+      // Restore bg transitions for crossfade during drag
+      document.getElementById('bgPhotoMain').style.transition = '';
+      document.getElementById('bgPhotoCancel').style.transition = '';
+      e.preventDefault();
     }
-  }, {passive: false});
-  document.addEventListener('touchmove', function(e) {
+  }
+
+  function onMove(e) {
     if (!_entrySwiping) return;
-    var t = e.touches[0];
-    if (!t) return;
-    _entrySwipeDY = t.clientY - _entrySwipeY0;
+    var cy = getClientY(e);
+    _entrySwipeDY = cy - _entrySwipeY0;
     if (_entrySwipeDY > 0) {
       e.preventDefault();
       var panel = document.getElementById('entryPopupPanel');
       var scale = parseFloat(getComputedStyle(document.querySelector('.app')).zoom) || 1;
       if (panel) panel.style.transform = 'translateY(' + (_entrySwipeDY / scale) + 'px)';
+      // Crossfade home bg: 取消闪屏广告底图 → 首页底图
+      var d = _entrySwipeDY / scale;
+      var t = Math.min(d / 100, 1);
+      document.getElementById('bgPhotoMain').style.opacity = t;
+      document.getElementById('bgPhotoCancel').style.opacity = 1 - t;
     }
-  }, {passive: false});
-  document.addEventListener('touchend', function(e) {
+  }
+
+  function onEnd(e) {
     if (!_entrySwiping) return;
     _entrySwiping = false;
     var panel = document.getElementById('entryPopupPanel');
@@ -4579,11 +4656,22 @@ function entryClaimCoupon() {
     var scale = parseFloat(getComputedStyle(document.querySelector('.app')).zoom) || 1;
     if (_entrySwipeDY / scale > 100) {
       dismissEntryPopup();
+      revealHomePage();
     } else {
       panel.style.transform = 'translateY(0)';
+      // Fade back to cancel bg
+      document.getElementById('bgPhotoMain').style.opacity = '0';
+      document.getElementById('bgPhotoCancel').style.opacity = '1';
       setTimeout(function() { panel.style.transition = ''; panel.style.transform = ''; }, 650);
     }
-  });
+  }
+
+  document.addEventListener('touchstart', onStart, {passive: false});
+  document.addEventListener('touchmove', onMove, {passive: false});
+  document.addEventListener('touchend', onEnd);
+  document.addEventListener('mousedown', onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onEnd);
 })();
 
 // ===== Confirm Order Page =====
@@ -5055,7 +5143,9 @@ function dVeggiesIdle(){
 function drawGame(){ ctx.clearRect(0,0,W,H); if (gs===ST.EMPTY||gs===ST.IDLE) return; dGradientBg(); dGround(); dMtn(); dVeggiesIdle(); dPig(); if (gs===ST.PLAY) { dObs(); dUI(); } if (gs===ST.OVER) dObs(); if (gs===ST.OVER&&otm>20) dOver(); }
 function dGradientBg(){
   if (gs===ST.OVER) return;
-  if (IMG.gradientBg) { ctx.drawImage(IMG.gradientBg, 0, 0, W, H); }
+  if (IMG.gradientBg) { ctx.drawImage(IMG.gradientBg, 0, -80, W, H); }
+  var gb = H - 80;
+  if (gb < H) { ctx.fillStyle = '#F0D5B5'; ctx.fillRect(0, gb, W, H - gb); }
 }
 function dGround(){
   if (gs===ST.OVER) return;
@@ -5233,7 +5323,7 @@ window.hideWaitingPage = function(){
   if (_loopRaf) { cancelAnimationFrame(_loopRaf); _loopRaf = 0; }
   // 确保导航栏可见
   document.getElementById('navBar').style.display = '';
-  document.getElementById('navBar').style.zIndex = '102';
+  document.getElementById('navBar').style.zIndex = '';
   var nbg = document.querySelector('.nav-bar-bg'); if (nbg) nbg.classList.add('show');
   // 先隐藏菜单页，避免跳转订单页时短暂露出
   var menuPage = document.getElementById('page-menu');
