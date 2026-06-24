@@ -5215,7 +5215,7 @@ function endGame(){
   var bgImg = document.getElementById('waitingBgImg');
   if (bgImg) bgImg.src = '游戏开始页面/游戏页面.png';
   var m = document.getElementById('pigStatusMain');
-  if (m) m.textContent = '已出餐，等待上菜';
+  if (m) m.innerHTML = '已出餐，<br>等待上菜';
   var s = document.getElementById('pigStatusSub');
   if (s) s.style.display = 'none';
   resetToIdle();
